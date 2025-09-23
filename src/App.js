@@ -39,7 +39,7 @@ const InteractiveEye = ({ scale = 1 }) => {
             transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
           }}
         >
-          <div className="w-2 h-2 md:w-3 md:h-3 bg-black rounded-full relative">
+          <div className="w-2 h-2 md:w-3 md:h-3 bg-sky-blue-250 rounded-full relative">
             <div className="w-0.5 h-0.5 md:w-1 md:h-1 bg-white rounded-full absolute top-0.5 left-0.5 opacity-60"></div>
           </div>
         </div>
