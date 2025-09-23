@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
+import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X } from 'lucide-react';
 
 // Интерактивный глаз компонент
 const InteractiveEye = ({ scale = 1 }) => {
@@ -39,12 +39,110 @@ const InteractiveEye = ({ scale = 1 }) => {
             transform: `translate(${mousePos.x}px, ${mousePos.y}px)`,
           }}
         >
-          <div className="w-2 h-2 md:w-3 md:h-3 bg-sky-blue-250 rounded-full relative">
+          <div className="w-2 h-2 md:w-3 md:h-3 bg-sky-500 rounded-full relative">
             <div className="w-0.5 h-0.5 md:w-1 md:h-1 bg-white rounded-full absolute top-0.5 left-0.5 opacity-60"></div>
           </div>
         </div>
       </div>
     </div>
+  );
+};
+
+// Компонент кнопки справки
+const HelpButton = () => {
+  const [showHelp, setShowHelp] = useState(false);
+
+  return (
+    <>
+      {/* Ненавязчивая кнопка справки */}
+      <button
+        onClick={() => setShowHelp(true)}
+        className="fixed bottom-6 right-6 w-10 h-10 bg-white border border-neutral-300 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all opacity-60 hover:opacity-100 z-40"
+        title="Информация о приватности и использовании"
+      >
+        <HelpCircle className="w-5 h-5 text-neutral-600" />
+      </button>
+
+      {/* Модальное окно с информацией */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50" onClick={() => setShowHelp(false)}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-6">
+              {/* Заголовок */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-medium text-neutral-900">О системе i.p</h2>
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
+                >
+                  <X className="w-4 h-4 text-neutral-600" />
+                </button>
+              </div>
+
+              {/* Приватность */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-neutral-800 mb-3 flex items-center">
+                  <span className="text-xl mr-2">🔒</span>
+                  Ваши данные в безопасности
+                </h3>
+                <div className="space-y-2 text-sm text-neutral-600 font-light bg-neutral-50 rounded-xl p-4">
+                  <p>• Все данные хранятся только у вас в браузере</p>
+                  <p>• Никакая информация не отправляется на серверы</p>
+                  <p>• Работает полностью офлайн после загрузки</p>
+                  <p>• Данные сохраняются между сессиями</p>
+                </div>
+              </div>
+
+              {/* Как пользоваться */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-neutral-800 mb-3 flex items-center">
+                  <span className="text-xl mr-2">📖</span>
+                  Как пользоваться
+                </h3>
+                <div className="space-y-3 text-sm text-neutral-600 font-light">
+                  <div>
+                    <p className="font-medium text-neutral-800 mb-1">Ритуалы</p>
+                    <p>Нажимайте на карточки для отметки выполнения. Каждый ритуал дает очки.</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-neutral-800 mb-1">Задачи</p>
+                    <p>Добавляйте дневные задачи с приоритетом 1-3 очка.</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-neutral-800 mb-1">Награды</p>
+                    <p>Тратьте накопленные очки на приятные вещи.</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-neutral-800 mb-1">Навигация</p>
+                    <p>Используйте стрелки ← → или свайпы между экранами.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Принцип */}
+              <div className="mb-4">
+                <div className="bg-neutral-50 rounded-xl p-4 text-center">
+                  <p className="text-sm text-neutral-700 font-light italic leading-relaxed">
+                    "Радуем себя не тогда, когда есть возможность и деньги, 
+                    а тогда, когда доделали важные дела"
+                  </p>
+                </div>
+              </div>
+
+              {/* Кнопка закрытия */}
+              <div className="text-center">
+                <button
+                  onClick={() => setShowHelp(false)}
+                  className="bg-neutral-900 text-white px-6 py-2 rounded-xl hover:bg-neutral-800 transition-colors font-medium text-sm"
+                >
+                  Понятно!
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
@@ -853,6 +951,9 @@ const App = () => {
           </div>
         </div>
       </div>
+
+      {/* Кнопка справки */}
+      <HelpButton />
     </div>
   );
 };
