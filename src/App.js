@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X } from 'lucide-react';
+import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X, Smile, Download, Flame, TrendingUp, Moon, DollarSign } from 'lucide-react';
 
 // Интерактивный глаз компонент
 const InteractiveEye = ({ scale = 1 }) => {
@@ -54,7 +54,6 @@ const HelpButton = () => {
 
   return (
     <>
-      {/* Ненавязчивая кнопка справки */}
       <button
         onClick={() => setShowHelp(true)}
         className="fixed bottom-6 right-6 w-10 h-10 bg-white border border-neutral-300 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all opacity-60 hover:opacity-100 z-40"
@@ -63,12 +62,10 @@ const HelpButton = () => {
         <HelpCircle className="w-5 h-5 text-neutral-600" />
       </button>
 
-      {/* Модальное окно с информацией */}
       {showHelp && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50" onClick={() => setShowHelp(false)}>
           <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="p-6">
-              {/* Заголовок */}
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-medium text-neutral-900">О системе i.p</h2>
                 <button
@@ -79,7 +76,6 @@ const HelpButton = () => {
                 </button>
               </div>
 
-              {/* Приватность */}
               <div className="mb-6">
                 <h3 className="text-lg font-medium text-neutral-800 mb-3 flex items-center">
                   <span className="text-xl mr-2">🔒</span>
@@ -93,43 +89,6 @@ const HelpButton = () => {
                 </div>
               </div>
 
-              {/* Как пользоваться */}
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-neutral-800 mb-3 flex items-center">
-                  <span className="text-xl mr-2">📖</span>
-                  Как пользоваться
-                </h3>
-                <div className="space-y-3 text-sm text-neutral-600 font-light">
-                  <div>
-                    <p className="font-medium text-neutral-800 mb-1">Ритуалы</p>
-                    <p>Нажимайте на карточки для отметки выполнения. Каждый ритуал дает очки.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-neutral-800 mb-1">Задачи</p>
-                    <p>Добавляйте дневные задачи с приоритетом 1-3 очка.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-neutral-800 mb-1">Награды</p>
-                    <p>Тратьте накопленные очки на приятные вещи.</p>
-                  </div>
-                  <div>
-                    <p className="font-medium text-neutral-800 mb-1">Навигация</p>
-                    <p>Используйте стрелки ← → или свайпы между экранами.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Принцип */}
-              <div className="mb-4">
-                <div className="bg-neutral-50 rounded-xl p-4 text-center">
-                  <p className="text-sm text-neutral-700 font-light italic leading-relaxed">
-                    "Радуем себя не тогда, когда есть возможность и деньги, 
-                    а тогда, когда доделали важные дела"
-                  </p>
-                </div>
-              </div>
-
-              {/* Кнопка закрытия */}
               <div className="text-center">
                 <button
                   onClick={() => setShowHelp(false)}
@@ -151,9 +110,11 @@ const App = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const [week, setWeek] = useState(() => parseInt(localStorage.getItem('ip-week') || '1'));
   const [points, setPoints] = useState(() => parseInt(localStorage.getItem('ip-points') || '0'));
+  const [level, setLevel] = useState(() => parseInt(localStorage.getItem('ip-level') || '1'));
+  const [totalPoints, setTotalPoints] = useState(() => parseInt(localStorage.getItem('ip-totalPoints') || '0'));
   const [lastResetDate, setLastResetDate] = useState(() => localStorage.getItem('ip-lastReset') || new Date().toDateString());
   
-  // Ритуалы
+  // Ритуалы и серии
   const [rituals, setRituals] = useState(() => {
     const saved = localStorage.getItem('ip-rituals');
     if (saved) return JSON.parse(saved);
@@ -168,24 +129,38 @@ const App = () => {
     };
   });
 
-  // Задачи и прочее
-  const [tasks, setTasks] = useState(() => JSON.parse(localStorage.getItem('ip-tasks') || '[]'));
+  const [streaks, setStreaks] = useState(() => JSON.parse(localStorage.getItem('ip-streaks') || '{}'));
+
+  // Задачи разных типов
+  const [dailyTasks, setDailyTasks] = useState(() => JSON.parse(localStorage.getItem('ip-dailyTasks') || '[]'));
+  const [weeklyGoals, setWeeklyGoals] = useState(() => JSON.parse(localStorage.getItem('ip-weeklyGoals') || '[]'));
+  const [monthlyProjects, setMonthlyProjects] = useState(() => JSON.parse(localStorage.getItem('ip-monthlyProjects') || '[]'));
+  
   const [newTask, setNewTask] = useState('');
   const [taskPriority, setTaskPriority] = useState(1);
+  const [taskType, setTaskType] = useState('daily');
+
+  // Трекеры
+  const [mood, setMood] = useState(() => parseInt(localStorage.getItem('ip-todayMood') || '5'));
+  const [gratitude, setGratitude] = useState(() => JSON.parse(localStorage.getItem('ip-gratitude') || '[]'));
+  const [newGratitude, setNewGratitude] = useState('');
+  const [sleepData, setSleepData] = useState(() => JSON.parse(localStorage.getItem('ip-sleepData') || '{}'));
+  const [finances, setFinances] = useState(() => JSON.parse(localStorage.getItem('ip-finances') || '[]'));
+
   const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('ip-achievements') || '[]'));
   const [weekPlan, setWeekPlan] = useState(() => JSON.parse(localStorage.getItem('ip-weekPlan') || '{}'));
   const [rewards, setRewards] = useState(() => {
     const saved = localStorage.getItem('ip-rewards');
     if (saved) return JSON.parse(saved);
     return [
-      { id: 1, name: 'Вкусный кофе', cost: 10, claimed: false },
-      { id: 2, name: 'Массаж/SPA', cost: 80, claimed: false },
-      { id: 3, name: 'Поход в кино', cost: 40, claimed: false },
-      { id: 4, name: 'Ужин в ресторане', cost: 60, claimed: false },
-      { id: 5, name: 'Новая вещь', cost: 70, claimed: false },
-      { id: 6, name: 'Ничего не делать', cost: 30, claimed: false },
-      { id: 7, name: 'Поесть вредное', cost: 35, claimed: false },
-      { id: 8, name: 'Сходить на свидание', cost: 50, claimed: false },
+      { id: 1, name: 'Вкусный кофе', cost: 10, claimed: false, resetDays: 1 },
+      { id: 2, name: 'Массаж/SPA', cost: 80, claimed: false, resetDays: 7 },
+      { id: 3, name: 'Поход в кино', cost: 40, claimed: false, resetDays: 3 },
+      { id: 4, name: 'Ужин в ресторане', cost: 60, claimed: false, resetDays: 7 },
+      { id: 5, name: 'Новая вещь', cost: 70, claimed: false, resetDays: 14 },
+      { id: 6, name: '2 часа ничего не делать', cost: 30, claimed: false, resetDays: 1 },
+      { id: 7, name: 'Поесть что хочется', cost: 25, claimed: false, resetDays: 2 },
+      { id: 8, name: 'День без планов', cost: 50, claimed: false, resetDays: 7 },
     ];
   });
 
@@ -224,6 +199,8 @@ const App = () => {
 
   const screens = [
     { name: 'Ритуалы', icon: Trophy },
+    { name: 'Цели', icon: Target },
+    { name: 'Трекеры', icon: TrendingUp },
     { name: 'Планирование', icon: Calendar },  
     { name: 'Награды', icon: Gift },
     { name: 'Статистика', icon: BarChart3 }
@@ -232,7 +209,29 @@ const App = () => {
   const maxPoints = 70;
   const weekProgress = Math.min((points / maxPoints) * 100, 100);
 
-  // Вычисляем время до сброса
+  // Вычисляем уровень
+  const calculateLevel = (totalPts) => Math.floor(totalPts / 100) + 1;
+  const getPointsForNextLevel = () => (level * 100) - totalPoints;
+
+  // Сохранение в localStorage
+  useEffect(() => { localStorage.setItem('ip-week', week.toString()); }, [week]);
+  useEffect(() => { localStorage.setItem('ip-points', points.toString()); }, [points]);
+  useEffect(() => { localStorage.setItem('ip-level', level.toString()); }, [level]);
+  useEffect(() => { localStorage.setItem('ip-totalPoints', totalPoints.toString()); }, [totalPoints]);
+  useEffect(() => { localStorage.setItem('ip-rituals', JSON.stringify(rituals)); }, [rituals]);
+  useEffect(() => { localStorage.setItem('ip-streaks', JSON.stringify(streaks)); }, [streaks]);
+  useEffect(() => { localStorage.setItem('ip-dailyTasks', JSON.stringify(dailyTasks)); }, [dailyTasks]);
+  useEffect(() => { localStorage.setItem('ip-weeklyGoals', JSON.stringify(weeklyGoals)); }, [weeklyGoals]);
+  useEffect(() => { localStorage.setItem('ip-monthlyProjects', JSON.stringify(monthlyProjects)); }, [monthlyProjects]);
+  useEffect(() => { localStorage.setItem('ip-todayMood', mood.toString()); }, [mood]);
+  useEffect(() => { localStorage.setItem('ip-gratitude', JSON.stringify(gratitude)); }, [gratitude]);
+  useEffect(() => { localStorage.setItem('ip-sleepData', JSON.stringify(sleepData)); }, [sleepData]);
+  useEffect(() => { localStorage.setItem('ip-finances', JSON.stringify(finances)); }, [finances]);
+  useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
+  useEffect(() => { localStorage.setItem('ip-weekPlan', JSON.stringify(weekPlan)); }, [weekPlan]);
+  useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
+  useEffect(() => { localStorage.setItem('ip-lastReset', lastResetDate); }, [lastResetDate]);
+
   const getTimeUntilReset = () => {
     const now = new Date();
     const tomorrow = new Date(now);
@@ -246,17 +245,6 @@ const App = () => {
     return `${hours}ч ${minutes}м`;
   };
 
-  // Сохранение в localStorage
-  useEffect(() => { localStorage.setItem('ip-week', week.toString()); }, [week]);
-  useEffect(() => { localStorage.setItem('ip-points', points.toString()); }, [points]);
-  useEffect(() => { localStorage.setItem('ip-rituals', JSON.stringify(rituals)); }, [rituals]);
-  useEffect(() => { localStorage.setItem('ip-tasks', JSON.stringify(tasks)); }, [tasks]);
-  useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
-  useEffect(() => { localStorage.setItem('ip-weekPlan', JSON.stringify(weekPlan)); }, [weekPlan]);
-  useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
-  useEffect(() => { localStorage.setItem('ip-lastReset', lastResetDate); }, [lastResetDate]);
-
-  // Добавление достижения
   const addAchievement = useCallback((text) => {
     const newAchievement = { 
       id: Date.now(), 
@@ -266,7 +254,47 @@ const App = () => {
     setAchievements(prev => [...prev, newAchievement]);
   }, []);
 
-  // Логика ритуалов
+  // Обновляем очки и уровень
+  const updatePoints = useCallback((pointsToAdd) => {
+    setPoints(prev => prev + pointsToAdd);
+    setTotalPoints(prev => {
+      const newTotal = prev + pointsToAdd;
+      const newLevel = calculateLevel(newTotal);
+      if (newLevel > level) {
+        setLevel(newLevel);
+        addAchievement(`🆙 Уровень ${newLevel} достигнут!`);
+      }
+      return newTotal;
+    });
+  }, [level, addAchievement]);
+
+  // Обновляем серии для ритуалов
+  const updateStreak = useCallback((ritualKey, completed) => {
+    const today = new Date().toDateString();
+    setStreaks(prev => {
+      const newStreaks = { ...prev };
+      if (!newStreaks[ritualKey]) {
+        newStreaks[ritualKey] = { count: 0, lastDate: null };
+      }
+      
+      if (completed) {
+        if (newStreaks[ritualKey].lastDate !== today) {
+          newStreaks[ritualKey].count += 1;
+          newStreaks[ritualKey].lastDate = today;
+          
+          // Достижения за серии
+          const streakCount = newStreaks[ritualKey].count;
+          if (streakCount === 7) addAchievement(`🔥 ${ritualConfig[ritualKey].name}: 7 дней подряд!`);
+          if (streakCount === 30) addAchievement(`💎 ${ritualConfig[ritualKey].name}: месяц без перерыва!`);
+        }
+      } else {
+        newStreaks[ritualKey].count = 0;
+      }
+      
+      return newStreaks;
+    });
+  }, [addAchievement, ritualConfig]);
+
   const toggleRitual = useCallback((ritualKey) => {
     const ritual = ritualConfig[ritualKey];
     if (!ritual) return;
@@ -275,31 +303,18 @@ const App = () => {
       const isCurrentlyActive = prevRituals[ritualKey];
       const newRituals = { ...prevRituals, [ritualKey]: !isCurrentlyActive };
 
-      // Обновляем очки
       if (!isCurrentlyActive) {
-        // Добавляем очки
-        setPoints(prevPoints => {
-          const newPoints = prevPoints + ritual.points;
-          console.log(`${ritual.name}: +${ritual.points} очков (всего: ${newPoints})`);
-          return newPoints;
-        });
-
-        // Проверяем достижения за ритуалы
-        const completedCount = Object.values(newRituals).filter(Boolean).length;
-        if (completedCount === 5) addAchievement('🌟 5 ритуалов выполнено!');
-        if (completedCount === 10) addAchievement('🔥 10 ритуалов за день!');
-        if (completedCount === 15) addAchievement('💎 15 ритуалов - отлично!');
-        if (completedCount === 20) addAchievement('🏆 Все ритуалы выполнены!');
+        updatePoints(ritual.points);
+        updateStreak(ritualKey, true);
       } else {
-        // Убираем очки
-        setPoints(prevPoints => Math.max(0, prevPoints - ritual.points));
+        setPoints(prev => Math.max(0, prev - ritual.points));
+        updateStreak(ritualKey, false);
       }
 
       return newRituals;
     });
-  }, [ritualConfig, addAchievement]);
+  }, [ritualConfig, updatePoints, updateStreak]);
 
-  // Логика задач
   const addTask = useCallback(() => {
     if (!newTask.trim()) return;
     
@@ -307,15 +322,23 @@ const App = () => {
       id: Date.now(),
       text: newTask.trim(),
       priority: taskPriority,
-      completed: false
+      completed: false,
+      createdAt: new Date().toISOString()
     };
     
-    setTasks(prev => [...prev, task]);
+    if (taskType === 'daily') {
+      setDailyTasks(prev => [...prev, task]);
+    } else if (taskType === 'weekly') {
+      setWeeklyGoals(prev => [...prev, task]);
+    } else if (taskType === 'monthly') {
+      setMonthlyProjects(prev => [...prev, task]);
+    }
+    
     setNewTask('');
-  }, [newTask, taskPriority]);
+  }, [newTask, taskPriority, taskType]);
 
-  const toggleTask = useCallback((taskId) => {
-    setTasks(prevTasks => {
+  const toggleTask = useCallback((taskId, taskType) => {
+    const toggleTaskInArray = (prevTasks) => {
       const taskIndex = prevTasks.findIndex(t => t.id === taskId);
       if (taskIndex === -1) return prevTasks;
 
@@ -323,24 +346,37 @@ const App = () => {
       const newTasks = [...prevTasks];
       newTasks[taskIndex] = { ...task, completed: !task.completed };
 
-      // Обновляем очки
       if (!task.completed) {
-        setPoints(prevPoints => prevPoints + task.priority);
-        
-        // Проверяем достижения за задачи
-        const completedCount = newTasks.filter(t => t.completed).length;
-        if (completedCount === 5) addAchievement('📋 5 задач выполнено!');
-        if (completedCount === 10) addAchievement('💪 10 задач выполнено!');
-        if (completedCount === 15) addAchievement('🚀 15 задач - продуктивно!');
+        updatePoints(task.priority);
       } else {
-        setPoints(prevPoints => Math.max(0, prevPoints - task.priority));
+        setPoints(prev => Math.max(0, prev - task.priority));
       }
 
       return newTasks;
-    });
-  }, [addAchievement]);
+    };
 
-  // Награды
+    if (taskType === 'daily') {
+      setDailyTasks(toggleTaskInArray);
+    } else if (taskType === 'weekly') {
+      setWeeklyGoals(toggleTaskInArray);
+    } else if (taskType === 'monthly') {
+      setMonthlyProjects(toggleTaskInArray);
+    }
+  }, [updatePoints]);
+
+  const addGratitude = useCallback(() => {
+    if (!newGratitude.trim()) return;
+    
+    const gratitudeItem = {
+      id: Date.now(),
+      text: newGratitude.trim(),
+      date: new Date().toDateString()
+    };
+    
+    setGratitude(prev => [...prev, gratitudeItem]);
+    setNewGratitude('');
+  }, [newGratitude]);
+
   const claimReward = useCallback((rewardId) => {
     setRewards(prevRewards => {
       const rewardIndex = prevRewards.findIndex(r => r.id === rewardId);
@@ -353,29 +389,20 @@ const App = () => {
       addAchievement(`🎁 Награда: ${reward.name}!`);
 
       const newRewards = [...prevRewards];
-      newRewards[rewardIndex] = { ...reward, claimed: true };
-
-      // Сбрасываем через неделю
-      setTimeout(() => {
-        setRewards(prev => prev.map(r => 
-          r.id === rewardId ? { ...r, claimed: false } : r
-        ));
-      }, 7 * 24 * 60 * 60 * 1000);
+      newRewards[rewardIndex] = { ...reward, claimed: true, claimedAt: Date.now() };
 
       return newRewards;
     });
   }, [points, addAchievement]);
 
-  // Финансовые бонусы
   const addFinancialBonus = useCallback((bonusId) => {
     const bonus = financialBonuses.find(b => b.id === bonusId);
     if (!bonus) return;
 
-    setPoints(prevPoints => prevPoints + bonus.points);
+    updatePoints(bonus.points);
     addAchievement(`💰 ${bonus.name}: +${bonus.points} очков!`);
-  }, [addAchievement]);
+  }, [addAchievement, updatePoints]);
 
-  // Навигация по экранам
   const changeScreen = useCallback((direction) => {
     setCurrentScreen(prev => {
       if (direction === 'next') {
@@ -385,6 +412,70 @@ const App = () => {
       }
     });
   }, [screens.length]);
+
+  // Экспорт данных
+  const exportData = useCallback(() => {
+    const data = {
+      week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, 
+      monthlyProjects, mood, gratitude, achievements, exportDate: new Date().toISOString()
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ip-system-backup-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    addAchievement('📊 Данные экспортированы!');
+  }, [week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, monthlyProjects, mood, gratitude, achievements, addAchievement]);
+
+  // Сброс в новый день
+  useEffect(() => {
+    const checkNewDay = () => {
+      const today = new Date().toDateString();
+      if (today !== lastResetDate) {
+        // Сбрасываем ежедневные ритуалы
+        setRituals(prev => {
+          const newRituals = { ...prev };
+          Object.keys(ritualConfig).forEach(key => {
+            if (ritualConfig[key].time !== 'weekend') {
+              newRituals[key] = false;
+            }
+          });
+          return newRituals;
+        });
+
+        // Сбрасываем награды по таймеру
+        setRewards(prev => prev.map(reward => {
+          if (reward.claimed && reward.claimedAt) {
+            const daysSinceClaimed = Math.floor((Date.now() - reward.claimedAt) / (24 * 60 * 60 * 1000));
+            if (daysSinceClaimed >= reward.resetDays) {
+              return { ...reward, claimed: false, claimedAt: null };
+            }
+          }
+          return reward;
+        }));
+
+        setLastResetDate(today);
+        
+        if (new Date().getDay() === 1) {
+          setWeek(prev => prev + 1);
+          addAchievement(`🎯 Неделя ${week + 1} началась!`);
+        } else {
+          addAchievement('🌅 Новый день!');
+        }
+      }
+    };
+
+    checkNewDay();
+    const interval = setInterval(checkNewDay, 60000);
+    return () => clearInterval(interval);
+  }, [lastResetDate, week, ritualConfig, addAchievement]);
 
   // Свайп и клавиатура
   useEffect(() => {
@@ -423,64 +514,11 @@ const App = () => {
     };
   }, [changeScreen]);
 
-  // Проверка достижений по очкам
-  useEffect(() => {
-    const pointMilestones = [
-      { points: 50, text: '🎯 50 очков набрано!' },
-      { points: 100, text: '💯 100 очков достигнуто!' },
-      { points: 200, text: '🏅 200 очков - отличная неделя!' }
-    ];
-
-    pointMilestones.forEach(milestone => {
-      if (points >= milestone.points && 
-          !achievements.some(a => a.text === milestone.text)) {
-        addAchievement(milestone.text);
-      }
-    });
-
-    if (weekProgress >= 100 && 
-        !achievements.some(a => a.text.includes('неделя завершена'))) {
-      addAchievement('🎊 Неделя успешно завершена!');
-    }
-  }, [points, weekProgress, achievements, addAchievement]);
-
-  // Сброс в новый день
-  useEffect(() => {
-    const checkNewDay = () => {
-      const today = new Date().toDateString();
-      if (today !== lastResetDate) {
-        // Сбрасываем ежедневные ритуалы
-        setRituals(prev => {
-          const newRituals = { ...prev };
-          Object.keys(ritualConfig).forEach(key => {
-            if (ritualConfig[key].time !== 'weekend') {
-              newRituals[key] = false;
-            }
-          });
-          return newRituals;
-        });
-
-        setLastResetDate(today);
-        
-        // Проверяем новую неделю
-        if (new Date().getDay() === 1) {
-          setWeek(prev => prev + 1);
-          addAchievement(`🎯 Неделя ${week + 1} началась!`);
-        } else {
-          addAchievement('🌅 Новый день!');
-        }
-      }
-    };
-
-    checkNewDay();
-    const interval = setInterval(checkNewDay, 60000);
-    return () => clearInterval(interval);
-  }, [lastResetDate, week, ritualConfig, addAchievement]);
-
   // Компонент ритуала
   const RitualCard = ({ ritualKey, ritual }) => {
     const IconComponent = ritual.icon;
     const isActive = rituals[ritualKey];
+    const streak = streaks[ritualKey]?.count || 0;
 
     return (
       <div
@@ -491,6 +529,13 @@ const App = () => {
             : 'bg-white border-neutral-200 hover:border-neutral-300 shadow-sm hover:shadow-md'
         }`}
       >
+        {streak > 0 && (
+          <div className="absolute top-2 right-2 flex items-center space-x-1 text-xs">
+            <Flame className="w-3 h-3 text-orange-500" />
+            <span className={isActive ? 'text-orange-300' : 'text-orange-600'}>{streak}</span>
+          </div>
+        )}
+        
         <div className="flex items-start space-x-4">
           <div className={`flex-shrink-0 p-2 rounded-xl ${isActive ? 'bg-white bg-opacity-10' : 'bg-neutral-50'}`}>
             <IconComponent className={`w-6 h-6 ${isActive ? 'text-white' : ritual.color}`} />
@@ -514,22 +559,21 @@ const App = () => {
     );
   };
 
-  // Рендер экранов
   const renderScreen = () => {
     switch (currentScreen) {
       case 0: // Ритуалы
         return (
           <div className="space-y-8">
-            {/* Прогресс недели */}
+            {/* Прогресс и уровень */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-neutral-800 to-neutral-900 rounded-2xl flex items-center justify-center text-white font-light text-2xl">
-                    {week}
+                    {level}
                   </div>
                   <div>
-                    <h2 className="text-3xl font-light text-neutral-900">Неделя {week}</h2>
-                    <p className="text-neutral-600 font-light">{points} очков накоплено</p>
+                    <h2 className="text-3xl font-light text-neutral-900">Уровень {level}</h2>
+                    <p className="text-neutral-600 font-light">{points} очков • {getPointsForNextLevel()} до следующего уровня</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-6">
@@ -552,13 +596,10 @@ const App = () => {
                     style={{ width: `${weekProgress}%` }}
                   />
                 </div>
-                <p className="text-xs text-neutral-500 mt-2 font-light">
-                  Ритуалы сбрасываются ежедневно в 00:00
-                </p>
               </div>
             </div>
 
-            {/* Ритуалы */}
+            {/* Ритуалы по категориям */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные ритуалы</h3>
               
@@ -622,21 +663,35 @@ const App = () => {
                 </div>
               </div>
             </div>
+          </div>
+        );
 
-            {/* Задачи дня */}
+      case 1: // Цели
+        return (
+          <div className="space-y-8">
+            {/* Добавление задач */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8">Задачи дня</h3>
+              <h3 className="text-2xl font-light text-neutral-900 mb-8">Добавить цель</h3>
               
               <div className="flex flex-col lg:flex-row gap-4 mb-8">
                 <input
                   type="text"
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
-                  placeholder="Добавить новую задачу..."
+                  placeholder="Новая цель..."
                   className="flex-1 p-4 border border-neutral-200 rounded-2xl focus:border-neutral-400 focus:outline-none text-base font-light placeholder-neutral-400"
                   onKeyPress={(e) => e.key === 'Enter' && addTask()}
                 />
                 <div className="flex gap-3">
+                  <select
+                    value={taskType}
+                    onChange={(e) => setTaskType(e.target.value)}
+                    className="p-4 border border-neutral-200 rounded-2xl focus:border-neutral-400 focus:outline-none text-base font-light"
+                  >
+                    <option value="daily">Сегодня</option>
+                    <option value="weekly">Эта неделя</option>
+                    <option value="monthly">Этот месяц</option>
+                  </select>
                   <select
                     value={taskPriority}
                     onChange={(e) => setTaskPriority(Number(e.target.value))}
@@ -645,6 +700,7 @@ const App = () => {
                     <option value={1}>1 очко</option>
                     <option value={2}>2 очка</option>
                     <option value={3}>3 очка</option>
+                    <option value={5}>5 очков</option>
                   </select>
                   <button
                     onClick={addTask}
@@ -654,40 +710,208 @@ const App = () => {
                   </button>
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-3 max-h-96 overflow-y-auto">
-                {tasks.map(task => (
-                  <div
-                    key={task.id}
-                    onClick={() => toggleTask(task.id)}
-                    className={`p-5 rounded-2xl cursor-pointer transition-all border ${
-                      task.completed
-                        ? 'bg-neutral-50 border-neutral-200 opacity-60'
-                        : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
-                    } ${
-                      task.priority === 1 ? 'border-l-4 border-l-emerald-400' :
-                      task.priority === 2 ? 'border-l-4 border-l-amber-400' : 'border-l-4 border-l-red-400'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
-                        {task.text}
-                      </span>
-                      <div className="flex items-center space-x-3">
-                        <span className="text-sm bg-neutral-100 text-neutral-600 px-3 py-1 rounded-full font-medium">
-                          {task.priority} очк
+            {/* Ежедневные задачи */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <span className="text-2xl mr-3">📋</span>
+                Задачи на сегодня
+              </h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {dailyTasks.length === 0 ? (
+                  <p className="text-neutral-500 font-light">Задач на сегодня нет</p>
+                ) : (
+                  dailyTasks.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleTask(task.id, 'daily')}
+                      className={`p-4 rounded-xl cursor-pointer transition-all border ${
+                        task.completed
+                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
+                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
+                          {task.text}
                         </span>
-                        {task.completed && <CheckCircle className="w-5 h-5 text-emerald-500" />}
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full">
+                            {task.priority} очк
+                          </span>
+                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
+                        </div>
                       </div>
                     </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Недельные цели */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <span className="text-2xl mr-3">🎯</span>
+                Цели на неделю
+              </h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {weeklyGoals.length === 0 ? (
+                  <p className="text-neutral-500 font-light">Недельных целей нет</p>
+                ) : (
+                  weeklyGoals.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleTask(task.id, 'weekly')}
+                      className={`p-4 rounded-xl cursor-pointer transition-all border border-l-4 border-l-blue-400 ${
+                        task.completed
+                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
+                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
+                          {task.text}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
+                            {task.priority} очк
+                          </span>
+                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Месячные проекты */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <span className="text-2xl mr-3">🚀</span>
+                Проекты на месяц
+              </h3>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {monthlyProjects.length === 0 ? (
+                  <p className="text-neutral-500 font-light">Месячных проектов нет</p>
+                ) : (
+                  monthlyProjects.map(task => (
+                    <div
+                      key={task.id}
+                      onClick={() => toggleTask(task.id, 'monthly')}
+                      className={`p-4 rounded-xl cursor-pointer transition-all border border-l-4 border-l-purple-400 ${
+                        task.completed
+                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
+                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
+                          {task.text}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
+                            {task.priority} очк
+                          </span>
+                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        );
+
+      case 2: // Трекеры
+        return (
+          <div className="space-y-8">
+            {/* Настроение */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <Smile className="w-6 h-6 mr-3 text-yellow-500" />
+                Настроение сегодня
+              </h3>
+              <div className="flex items-center space-x-4 mb-4">
+                <span className="text-sm text-neutral-600">Ужасно</span>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  value={mood}
+                  onChange={(e) => setMood(parseInt(e.target.value))}
+                  className="flex-1"
+                />
+                <span className="text-sm text-neutral-600">Отлично</span>
+              </div>
+              <div className="text-center">
+                <span className="text-3xl font-light text-neutral-900">{mood}/10</span>
+                <p className="text-sm text-neutral-600 mt-1">
+                  {mood <= 3 ? 'Трудный день' : mood <= 6 ? 'Нормально' : mood <= 8 ? 'Хорошо' : 'Превосходно'}
+                </p>
+              </div>
+            </div>
+
+            {/* Журнал благодарностей */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <Heart className="w-6 h-6 mr-3 text-pink-500" />
+                Благодарности
+              </h3>
+              <div className="flex gap-4 mb-6">
+                <input
+                  type="text"
+                  value={newGratitude}
+                  onChange={(e) => setNewGratitude(e.target.value)}
+                  placeholder="За что вы благодарны сегодня?"
+                  className="flex-1 p-3 border border-neutral-200 rounded-xl focus:border-neutral-400 focus:outline-none text-sm font-light placeholder-neutral-400"
+                  onKeyPress={(e) => e.key === 'Enter' && addGratitude()}
+                />
+                <button
+                  onClick={addGratitude}
+                  className="bg-pink-500 text-white px-4 py-3 rounded-xl hover:bg-pink-600 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {gratitude.slice(-5).reverse().map(item => (
+                  <div key={item.id} className="bg-pink-50 rounded-lg p-3">
+                    <p className="text-sm text-neutral-700">{item.text}</p>
+                    <p className="text-xs text-neutral-500 mt-1">{item.date}</p>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Финансовые достижения */}
+            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-8 text-white">
+              <h3 className="text-xl font-medium mb-2 flex items-center">
+                <DollarSign className="w-6 h-6 mr-3" />
+                Финансовые достижения
+              </h3>
+              <p className="text-emerald-100 font-light mb-6">Отмечайте доходы и успехи</p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {financialBonuses.map(bonus => (
+                  <button
+                    key={bonus.id}
+                    onClick={() => addFinancialBonus(bonus.id)}
+                    className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl p-4 text-left hover:bg-opacity-20 transition-all"
+                  >
+                    <h4 className="font-medium mb-1">{bonus.name}</h4>
+                    <p className="text-emerald-100 text-sm font-light mb-2">{bonus.desc}</p>
+                    <p className="text-white font-medium text-sm">+{bonus.points} очков</p>
+                  </button>
                 ))}
               </div>
             </div>
           </div>
         );
 
-      case 1: // Планирование
+      case 3: // Планирование
         const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
         const hours = Array.from({ length: 16 }, (_, i) => i + 6);
 
@@ -732,30 +956,9 @@ const App = () => {
           </div>
         );
 
-      case 2: // Награды
+      case 4: // Награды
         return (
           <div className="space-y-8">
-            {/* Финансовые бонусы */}
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-8 text-white">
-              <h3 className="text-2xl font-light mb-2">Финансовые достижения</h3>
-              <p className="text-emerald-100 font-light mb-8">Отмечайте доходы и инвестиционные успехи</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {financialBonuses.map(bonus => (
-                  <button
-                    key={bonus.id}
-                    onClick={() => addFinancialBonus(bonus.id)}
-                    className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-2xl p-6 text-left hover:bg-opacity-20 transition-all backdrop-blur-sm"
-                  >
-                    <h4 className="font-medium text-lg mb-1">{bonus.name}</h4>
-                    <p className="text-emerald-100 text-sm font-light mb-3">{bonus.desc}</p>
-                    <p className="text-white font-medium">+{bonus.points} очков</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Награды */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <div className="flex items-center justify-between mb-8">
                 <div>
@@ -791,8 +994,8 @@ const App = () => {
                             <Gift className={`w-12 h-12 mx-auto ${canClaim ? 'text-neutral-700' : 'text-neutral-400'}`} />
                           )}
                         </div>
-                        <h4 className="font-medium text-neutral-900 mb-3">{reward.name}</h4>
-                        <p className={`font-light ${
+                        <h4 className="font-medium text-neutral-900 mb-2">{reward.name}</h4>
+                        <p className={`font-light text-sm mb-2 ${
                           reward.claimed ? 'text-emerald-600' : 
                           canClaim ? 'text-neutral-600' : 'text-red-500'
                         }`}>
@@ -800,6 +1003,11 @@ const App = () => {
                            canClaim ? `${reward.cost} очков` : 
                            `Нужно ${reward.cost} очков`}
                         </p>
+                        {reward.claimed && (
+                          <p className="text-xs text-neutral-500">
+                            Доступно через {reward.resetDays} {reward.resetDays === 1 ? 'день' : 'дней'}
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
@@ -809,21 +1017,37 @@ const App = () => {
           </div>
         );
 
-      case 3: // Статистика
+      case 5: // Статистика
+        const topStreaks = Object.entries(streaks)
+          .sort(([,a], [,b]) => b.count - a.count)
+          .slice(0, 5)
+          .filter(([,streak]) => streak.count > 0);
+
         return (
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8">Статистика и достижения</h3>
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-2xl font-light text-neutral-900">Статистика и достижения</h3>
+                <button
+                  onClick={exportData}
+                  className="flex items-center space-x-2 bg-neutral-100 text-neutral-700 px-4 py-2 rounded-xl hover:bg-neutral-200 transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="text-sm">Экспорт</span>
+                </button>
+              </div>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="space-y-4">
                   <h4 className="font-medium text-neutral-800 mb-6">Текущие показатели</h4>
                   {[
+                    { label: 'Уровень', value: level },
                     { label: 'Очки накоплено', value: points },
+                    { label: 'Всего очков заработано', value: totalPoints },
                     { label: 'Текущая неделя', value: week },
                     { label: 'Выполнено ритуалов сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
-                    { label: 'Выполнено задач', value: tasks.filter(t => t.completed).length },
-                    { label: 'Прогресс недели', value: `${Math.round(weekProgress)}%` }
+                    { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals, ...monthlyProjects].filter(t => !t.completed).length },
+                    { label: 'Настроение сегодня', value: `${mood}/10` }
                   ].map((item, i) => (
                     <div key={i} className="flex justify-between items-center p-4 bg-neutral-50 rounded-xl">
                       <span className="text-neutral-700 font-light">{item.label}</span>
@@ -832,19 +1056,42 @@ const App = () => {
                   ))}
                 </div>
 
-                <div>
-                  <h4 className="font-medium text-neutral-800 mb-6">Последние достижения</h4>
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {achievements.length === 0 ? (
-                      <p className="text-neutral-500 font-light">Достижений пока нет</p>
-                    ) : (
-                      achievements.slice(-8).reverse().map(achievement => (
-                        <div key={achievement.id} className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                          <p className="font-medium text-neutral-800">{achievement.text}</p>
-                          <p className="text-xs text-neutral-500 font-light mt-1">{achievement.time}</p>
-                        </div>
-                      ))
-                    )}
+                <div className="space-y-6">
+                  {/* Лучшие серии */}
+                  <div>
+                    <h4 className="font-medium text-neutral-800 mb-4 flex items-center">
+                      <Flame className="w-5 h-5 mr-2 text-orange-500" />
+                      Лучшие серии
+                    </h4>
+                    <div className="space-y-2">
+                      {topStreaks.length === 0 ? (
+                        <p className="text-neutral-500 font-light text-sm">Серий пока нет</p>
+                      ) : (
+                        topStreaks.map(([ritualKey, streak]) => (
+                          <div key={ritualKey} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                            <span className="text-sm text-neutral-700">{ritualConfig[ritualKey]?.name}</span>
+                            <span className="text-sm font-medium text-orange-600">{streak.count} дней</span>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Достижения */}
+                  <div>
+                    <h4 className="font-medium text-neutral-800 mb-4">Последние достижения</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {achievements.length === 0 ? (
+                        <p className="text-neutral-500 font-light text-sm">Достижений пока нет</p>
+                      ) : (
+                        achievements.slice(-6).reverse().map(achievement => (
+                          <div key={achievement.id} className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                            <p className="font-medium text-neutral-800 text-sm">{achievement.text}</p>
+                            <p className="text-xs text-neutral-500 font-light mt-1">{achievement.time}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -854,23 +1101,25 @@ const App = () => {
             <div className="bg-neutral-50 rounded-3xl p-8 border border-neutral-200">
               <h4 className="font-medium text-neutral-800 mb-4 flex items-center">
                 <RotateCcw className="w-5 h-5 mr-2" />
-                Как работает сброс состояния
+                Как работает система
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-light text-neutral-600">
                 <div>
                   <h5 className="font-medium text-neutral-800 mb-2">Ежедневный сброс (00:00)</h5>
                   <ul className="space-y-1">
-                    <li>• Все ежедневные ритуалы сбрасываются</li>
-                    <li>• Задачи остаются до ручного удаления</li>
-                    <li>• Очки сохраняются</li>
+                    <li>• Ежедневные ритуалы сбрасываются</li>
+                    <li>• Недельные и месячные цели остаются</li>
+                    <li>• Очки и уровень сохраняются</li>
+                    <li>• Серии продолжаются при выполнении</li>
                   </ul>
                 </div>
                 <div>
-                  <h5 className="font-medium text-neutral-800 mb-2">Недельные задачи</h5>
+                  <h5 className="font-medium text-neutral-800 mb-2">Награды</h5>
                   <ul className="space-y-1">
-                    <li>• Сбрасываются только по понедельникам</li>
-                    <li>• "4 часа на улице" и "Итоги недели"</li>
-                    <li>• Помогают завершить недельный прогресс</li>
+                    <li>• Разные периоды сброса (1-14 дней)</li>
+                    <li>• Кофе сбрасывается каждый день</li>
+                    <li>• SPA и рестораны - раз в неделю</li>
+                    <li>• Крупные покупки - раз в 2 недели</li>
                   </ul>
                 </div>
               </div>
@@ -908,21 +1157,21 @@ const App = () => {
             <ChevronLeft className="w-6 h-6 text-neutral-600" />
           </button>
 
-          <div className="flex space-x-2">
+          <div className="flex space-x-1 overflow-x-auto">
             {screens.map((screen, index) => {
               const IconComponent = screen.icon;
               return (
                 <button
                   key={index}
                   onClick={() => setCurrentScreen(index)}
-                  className={`flex items-center space-x-3 px-6 py-3 rounded-2xl font-light transition-all ${
+                  className={`flex items-center space-x-2 px-4 py-3 rounded-2xl font-light transition-all whitespace-nowrap ${
                     currentScreen === index
                       ? 'bg-neutral-900 text-white shadow-md'
                       : 'bg-white text-neutral-600 hover:bg-neutral-50 shadow-sm border border-neutral-100'
                   }`}
                 >
-                  <IconComponent className="w-5 h-5" />
-                  <span className="hidden sm:block tracking-wide">{screen.name}</span>
+                  <IconComponent className="w-4 h-4" />
+                  <span className="text-sm tracking-wide">{screen.name}</span>
                 </button>
               );
             })}
