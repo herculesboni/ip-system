@@ -180,13 +180,21 @@ const App = () => {
     if (saved) return saved;
     return [
       { id: 1, name: 'Вкусный кофе', cost: 10, claimed: false, resetDays: 1 },
-      { id: 2, name: 'Массаж/SPA', cost: 80, claimed: false, resetDays: 7 },
-      { id: 3, name: 'Поход в кино', cost: 40, claimed: false, resetDays: 3 },
-      { id: 4, name: 'Ужин в ресторане', cost: 60, claimed: false, resetDays: 7 },
-      { id: 5, name: 'Новая вещь', cost: 70, claimed: false, resetDays: 14 },
-      { id: 6, name: '2 часа ничего не делать', cost: 30, claimed: false, resetDays: 1 },
-      { id: 7, name: 'Поесть что хочется', cost: 25, claimed: false, resetDays: 2 },
-      { id: 8, name: 'День без планов', cost: 50, claimed: false, resetDays: 7 },
+      { id: 2, name: 'Любимый десерт', cost: 15, claimed: false, resetDays: 1 },
+      { id: 3, name: 'Часовой перерыв', cost: 20, claimed: false, resetDays: 1 },
+      { id: 4, name: '2 часа ничего не делать', cost: 30, claimed: false, resetDays: 1 },
+      { id: 5, name: 'Поесть что хочется', cost: 25, claimed: false, resetDays: 2 },
+      { id: 6, name: 'Новая книга/игра', cost: 35, claimed: false, resetDays: 3 },
+      { id: 7, name: 'Поход в кино', cost: 40, claimed: false, resetDays: 3 },
+      { id: 8, name: 'Заказ еды', cost: 45, claimed: false, resetDays: 3 },
+      { id: 9, name: 'День без планов', cost: 50, claimed: false, resetDays: 7 },
+      { id: 10, name: 'Ужин в ресторане', cost: 60, claimed: false, resetDays: 7 },
+      { id: 11, name: 'Шоппинг-день', cost: 65, claimed: false, resetDays: 7 },
+      { id: 12, name: 'Новая одежда', cost: 70, claimed: false, resetDays: 14 },
+      { id: 13, name: 'Массаж/SPA', cost: 80, claimed: false, resetDays: 7 },
+      { id: 14, name: 'Билет на концерт/шоу', cost: 90, claimed: false, resetDays: 14 },
+      { id: 15, name: 'Техника/гаджет', cost: 100, claimed: false, resetDays: 30 },
+      { id: 16, name: 'Выходные за городом', cost: 120, claimed: false, resetDays: 30 },
     ];
   });
 
@@ -227,6 +235,7 @@ const App = () => {
     { name: 'Привычки', icon: Trophy },
     { name: 'Цели', icon: Target },
     { name: 'Трекеры', icon: TrendingUp },
+    { name: 'Планирование', icon: Clock },
     { name: 'Календарь', icon: Calendar },  
     { name: 'Награды', icon: Gift },
     { name: 'Статистика', icon: BarChart3 }
@@ -1014,8 +1023,84 @@ const App = () => {
           </div>
         );
 
-      case 3: // Календарь выполненных целей
-        const days = getDaysInMonth(currentMonth);
+      case 3: // Планирование недели
+        const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+        const hours = Array.from({ length: 18 }, (_, i) => i + 6);
+
+        return (
+          <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+            <div className="mb-8">
+              <h3 className="text-2xl font-light text-neutral-900 mb-2">Планирование недели</h3>
+              <p className="text-neutral-600 font-light">Расставьте дела по часам на всю неделю</p>
+            </div>
+            
+            <div className="overflow-x-auto">
+              <div className="min-w-full" style={{ minWidth: '800px' }}>
+                {/* Header с днями недели */}
+                <div className="grid grid-cols-8 gap-2 mb-4 sticky top-0 bg-white z-10">
+                  <div className="p-3 text-center font-medium text-neutral-700 bg-neutral-50 rounded-xl">
+                    Время
+                  </div>
+                  {days.map(day => (
+                    <div key={day} className="p-3 text-center font-medium text-neutral-700 bg-neutral-50 rounded-xl">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Сетка планирования */}
+                <div className="space-y-2 max-h-[70vh] overflow-y-auto">
+                  {hours.map(hour => (
+                    <div key={hour} className="grid grid-cols-8 gap-2">
+                      <div className="p-3 text-center font-medium text-neutral-600 bg-neutral-50 rounded-xl min-h-[80px] flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="text-sm">{hour}:00</div>
+                          {hour < 23 && <div className="text-xs text-neutral-400">↓</div>}
+                        </div>
+                      </div>
+                      {days.map((day, dayIndex) => {
+                        const key = `${dayIndex}-${hour}`;
+                        return (
+                          <textarea
+                            key={key}
+                            value={weekPlan[key] || ''}
+                            onChange={(e) => setWeekPlan(prev => ({ ...prev, [key]: e.target.value }))}
+                            placeholder="Добавить план..."
+                            className="p-3 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-neutral-400 focus:shadow-sm min-h-[80px] resize-none font-light placeholder-neutral-400 transition-all"
+                            style={{ 
+                              background: weekPlan[key] ? 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)' : 'white' 
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Полезные советы */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl border border-blue-100">
+              <h4 className="font-medium text-neutral-800 mb-3 flex items-center">
+                <Clock className="w-5 h-5 mr-2 text-blue-600" />
+                Советы по планированию
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-neutral-600">
+                <div>
+                  <p className="mb-2">• <strong>Утро (6-9):</strong> Привычки и важные дела</p>
+                  <p className="mb-2">• <strong>День (9-18):</strong> Основная работа и встречи</p>
+                </div>
+                <div>
+                  <p className="mb-2">• <strong>Вечер (18-22):</strong> Отдых и планирование</p>
+                  <p className="mb-2">• <strong>Выходные:</strong> Восстановление и хобби</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4: // Календарь выполненных целей
+        const calendarDays = getDaysInMonth(currentMonth);
         const today = new Date();
         const todayString = today.toISOString().split('T')[0];
 
@@ -1059,7 +1144,7 @@ const App = () => {
               
               {/* Календарная сетка */}
               <div className="grid grid-cols-7 gap-2 mb-6">
-                {days.map((day, index) => {
+                {calendarDays.map((day, index) => {
                   const dateString = day.toISOString().split('T')[0];
                   const completedTasks = getCompletedTasksForDate(day);
                   const isToday = dateString === todayString;
@@ -1167,7 +1252,7 @@ const App = () => {
           </div>
         );
 
-      case 4: // Награды
+      case 5: // Награды
         return (
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
@@ -1182,14 +1267,14 @@ const App = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {rewards.map(reward => {
                   const canClaim = points >= reward.cost && !reward.claimed;
                   return (
                     <div
                       key={reward.id}
                       onClick={() => canClaim && claimReward(reward.id)}
-                      className={`p-6 rounded-2xl border transition-all ${
+                      className={`p-4 rounded-2xl border transition-all ${
                         reward.claimed
                           ? 'bg-emerald-50 border-emerald-200'
                           : canClaim
@@ -1198,15 +1283,15 @@ const App = () => {
                       }`}
                     >
                       <div className="text-center">
-                        <div className="mb-4">
+                        <div className="mb-3">
                           {reward.claimed ? (
-                            <Award className="w-12 h-12 text-emerald-500 mx-auto" />
+                            <Award className="w-8 h-8 text-emerald-500 mx-auto" />
                           ) : (
-                            <Gift className={`w-12 h-12 mx-auto ${canClaim ? 'text-neutral-700' : 'text-neutral-400'}`} />
+                            <Gift className={`w-8 h-8 mx-auto ${canClaim ? 'text-neutral-700' : 'text-neutral-400'}`} />
                           )}
                         </div>
-                        <h4 className="font-medium text-neutral-900 mb-2">{reward.name}</h4>
-                        <p className={`font-light text-sm mb-2 ${
+                        <h4 className="font-medium text-neutral-900 mb-2 text-sm leading-tight">{reward.name}</h4>
+                        <p className={`font-light text-xs mb-2 ${
                           reward.claimed ? 'text-emerald-600' : 
                           canClaim ? 'text-neutral-600' : 'text-red-500'
                         }`}>
@@ -1216,7 +1301,7 @@ const App = () => {
                         </p>
                         {reward.claimed && (
                           <p className="text-xs text-neutral-500">
-                            Доступно через {reward.resetDays} {reward.resetDays === 1 ? 'день' : 'дней'}
+                            Через {reward.resetDays} {reward.resetDays === 1 ? 'день' : 'дней'}
                           </p>
                         )}
                       </div>
@@ -1228,7 +1313,7 @@ const App = () => {
           </div>
         );
 
-      case 5: // Статистика
+      case 6: // Статистика
         const topStreaks = Object.entries(streaks)
           .sort(([,a], [,b]) => b.count - a.count)
           .slice(0, 5)
@@ -1327,10 +1412,10 @@ const App = () => {
                 <div>
                   <h5 className="font-medium text-neutral-800 mb-2">Награды</h5>
                   <ul className="space-y-1">
-                    <li>• Разные периоды сброса (1-14 дней)</li>
-                    <li>• Кофе сбрасывается каждый день</li>
+                    <li>• Разные периоды сброса (1-30 дней)</li>
+                    <li>• Кофе и десерты - каждый день</li>
                     <li>• SPA и рестораны - раз в неделю</li>
-                    <li>• Крупные покупки - раз в 2 недели</li>
+                    <li>• Крупные покупки - раз в месяц</li>
                   </ul>
                 </div>
               </div>
