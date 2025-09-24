@@ -1,6 +1,27 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X, Smile, Download, Flame, TrendingUp, Moon, DollarSign } from 'lucide-react';
 
+// Функция безопасного получения из localStorage
+const getFromStorage = (key, defaultValue) => {
+  if (typeof window === 'undefined') return defaultValue;
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    return defaultValue;
+  }
+};
+
+// Функция безопасного сохранения в localStorage
+const setToStorage = (key, value) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.warn('Failed to save to localStorage:', error);
+  }
+};
+
 // Интерактивный глаз компонент
 const InteractiveEye = ({ scale = 1 }) => {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -106,18 +127,22 @@ const HelpButton = () => {
 };
 
 const App = () => {
+  // Состояние календаря (перенесено на верхний уровень)
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+
   // Основное состояние
   const [currentScreen, setCurrentScreen] = useState(0);
-  const [week, setWeek] = useState(() => parseInt(localStorage.getItem('ip-week') || '1'));
-  const [points, setPoints] = useState(() => parseInt(localStorage.getItem('ip-points') || '0'));
-  const [level, setLevel] = useState(() => parseInt(localStorage.getItem('ip-level') || '1'));
-  const [totalPoints, setTotalPoints] = useState(() => parseInt(localStorage.getItem('ip-totalPoints') || '0'));
-  const [lastResetDate, setLastResetDate] = useState(() => localStorage.getItem('ip-lastReset') || new Date().toDateString());
+  const [week, setWeek] = useState(() => parseInt(getFromStorage('ip-week', '1')));
+  const [points, setPoints] = useState(() => parseInt(getFromStorage('ip-points', '0')));
+  const [level, setLevel] = useState(() => parseInt(getFromStorage('ip-level', '1')));
+  const [totalPoints, setTotalPoints] = useState(() => parseInt(getFromStorage('ip-totalPoints', '0')));
+  const [lastResetDate, setLastResetDate] = useState(() => getFromStorage('ip-lastReset', new Date().toDateString()));
   
-  // Ритуалы и серии
-  const [rituals, setRituals] = useState(() => {
-    const saved = localStorage.getItem('ip-rituals');
-    if (saved) return JSON.parse(saved);
+  // Привычки и серии
+  const [habits, setHabits] = useState(() => {
+    const saved = getFromStorage('ip-habits', null);
+    if (saved) return saved;
     return {
       wakeup: false, brush_morning: false, breakfast: false, sport: false,
       water_morning: false, vitamins: false, learning_morning: false,
@@ -129,30 +154,30 @@ const App = () => {
     };
   });
 
-  const [streaks, setStreaks] = useState(() => JSON.parse(localStorage.getItem('ip-streaks') || '{}'));
+  const [streaks, setStreaks] = useState(() => getFromStorage('ip-streaks', {}));
 
   // Задачи разных типов
-  const [dailyTasks, setDailyTasks] = useState(() => JSON.parse(localStorage.getItem('ip-dailyTasks') || '[]'));
-  const [weeklyGoals, setWeeklyGoals] = useState(() => JSON.parse(localStorage.getItem('ip-weeklyGoals') || '[]'));
-  const [monthlyProjects, setMonthlyProjects] = useState(() => JSON.parse(localStorage.getItem('ip-monthlyProjects') || '[]'));
-  const [completedHistory, setCompletedHistory] = useState(() => JSON.parse(localStorage.getItem('ip-completedHistory') || '{}'));
+  const [dailyTasks, setDailyTasks] = useState(() => getFromStorage('ip-dailyTasks', []));
+  const [weeklyGoals, setWeeklyGoals] = useState(() => getFromStorage('ip-weeklyGoals', []));
+  const [monthlyProjects, setMonthlyProjects] = useState(() => getFromStorage('ip-monthlyProjects', []));
+  const [completedHistory, setCompletedHistory] = useState(() => getFromStorage('ip-completedHistory', {}));
   
   const [newTask, setNewTask] = useState('');
   const [taskPriority, setTaskPriority] = useState(1);
   const [taskType, setTaskType] = useState('daily');
 
   // Трекеры
-  const [mood, setMood] = useState(() => parseInt(localStorage.getItem('ip-todayMood') || '5'));
-  const [gratitude, setGratitude] = useState(() => JSON.parse(localStorage.getItem('ip-gratitude') || '[]'));
+  const [mood, setMood] = useState(() => parseInt(getFromStorage('ip-todayMood', '5')));
+  const [gratitude, setGratitude] = useState(() => getFromStorage('ip-gratitude', []));
   const [newGratitude, setNewGratitude] = useState('');
-  const [sleepData, setSleepData] = useState(() => JSON.parse(localStorage.getItem('ip-sleepData') || '{}'));
-  const [finances, setFinances] = useState(() => JSON.parse(localStorage.getItem('ip-finances') || '[]'));
+  const [sleepData, setSleepData] = useState(() => getFromStorage('ip-sleepData', {}));
+  const [finances, setFinances] = useState(() => getFromStorage('ip-finances', []));
 
-  const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('ip-achievements') || '[]'));
-  const [weekPlan, setWeekPlan] = useState(() => JSON.parse(localStorage.getItem('ip-weekPlan') || '{}'));
+  const [achievements, setAchievements] = useState(() => getFromStorage('ip-achievements', []));
+  const [weekPlan, setWeekPlan] = useState(() => getFromStorage('ip-weekPlan', {}));
   const [rewards, setRewards] = useState(() => {
-    const saved = localStorage.getItem('ip-rewards');
-    if (saved) return JSON.parse(saved);
+    const saved = getFromStorage('ip-rewards', null);
+    if (saved) return saved;
     return [
       { id: 1, name: 'Вкусный кофе', cost: 10, claimed: false, resetDays: 1 },
       { id: 2, name: 'Массаж/SPA', cost: 80, claimed: false, resetDays: 7 },
@@ -165,8 +190,8 @@ const App = () => {
     ];
   });
 
-  // Конфигурация ритуалов
-  const ritualConfig = {
+  // Конфигурация привычек
+  const habitConfig = {
     wakeup: { name: 'Подъём в срок', points: 2, icon: Clock, color: 'text-blue-600', time: 'morning', desc: 'В одно время' },
     brush_morning: { name: 'Почистить зубы', points: 1, icon: Star, color: 'text-emerald-500', time: 'morning', desc: 'Утром' },
     breakfast: { name: 'Сделать завтрак', points: 2, icon: Coffee, color: 'text-amber-600', time: 'morning', desc: 'Здоровый' },
@@ -199,7 +224,7 @@ const App = () => {
   ];
 
   const screens = [
-    { name: 'Ритуалы', icon: Trophy },
+    { name: 'Привычки', icon: Trophy },
     { name: 'Цели', icon: Target },
     { name: 'Трекеры', icon: TrendingUp },
     { name: 'Календарь', icon: Calendar },  
@@ -214,25 +239,25 @@ const App = () => {
   const calculateLevel = (totalPts) => Math.floor(totalPts / 100) + 1;
   const getPointsForNextLevel = () => (level * 100) - totalPoints;
 
-  // Сохранение в localStorage
-  useEffect(() => { localStorage.setItem('ip-week', week.toString()); }, [week]);
-  useEffect(() => { localStorage.setItem('ip-points', points.toString()); }, [points]);
-  useEffect(() => { localStorage.setItem('ip-level', level.toString()); }, [level]);
-  useEffect(() => { localStorage.setItem('ip-totalPoints', totalPoints.toString()); }, [totalPoints]);
-  useEffect(() => { localStorage.setItem('ip-rituals', JSON.stringify(rituals)); }, [rituals]);
-  useEffect(() => { localStorage.setItem('ip-streaks', JSON.stringify(streaks)); }, [streaks]);
-  useEffect(() => { localStorage.setItem('ip-dailyTasks', JSON.stringify(dailyTasks)); }, [dailyTasks]);
-  useEffect(() => { localStorage.setItem('ip-weeklyGoals', JSON.stringify(weeklyGoals)); }, [weeklyGoals]);
-  useEffect(() => { localStorage.setItem('ip-monthlyProjects', JSON.stringify(monthlyProjects)); }, [monthlyProjects]);
-  useEffect(() => { localStorage.setItem('ip-todayMood', mood.toString()); }, [mood]);
-  useEffect(() => { localStorage.setItem('ip-gratitude', JSON.stringify(gratitude)); }, [gratitude]);
-  useEffect(() => { localStorage.setItem('ip-sleepData', JSON.stringify(sleepData)); }, [sleepData]);
-  useEffect(() => { localStorage.setItem('ip-finances', JSON.stringify(finances)); }, [finances]);
-  useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
-  useEffect(() => { localStorage.setItem('ip-weekPlan', JSON.stringify(weekPlan)); }, [weekPlan]);
-  useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
-  useEffect(() => { localStorage.setItem('ip-completedHistory', JSON.stringify(completedHistory)); }, [completedHistory]);
-  useEffect(() => { localStorage.setItem('ip-lastReset', lastResetDate); }, [lastResetDate]);
+  // Сохранение в localStorage с использованием useEffect
+  useEffect(() => { setToStorage('ip-week', week); }, [week]);
+  useEffect(() => { setToStorage('ip-points', points); }, [points]);
+  useEffect(() => { setToStorage('ip-level', level); }, [level]);
+  useEffect(() => { setToStorage('ip-totalPoints', totalPoints); }, [totalPoints]);
+  useEffect(() => { setToStorage('ip-habits', habits); }, [habits]);
+  useEffect(() => { setToStorage('ip-streaks', streaks); }, [streaks]);
+  useEffect(() => { setToStorage('ip-dailyTasks', dailyTasks); }, [dailyTasks]);
+  useEffect(() => { setToStorage('ip-weeklyGoals', weeklyGoals); }, [weeklyGoals]);
+  useEffect(() => { setToStorage('ip-monthlyProjects', monthlyProjects); }, [monthlyProjects]);
+  useEffect(() => { setToStorage('ip-todayMood', mood); }, [mood]);
+  useEffect(() => { setToStorage('ip-gratitude', gratitude); }, [gratitude]);
+  useEffect(() => { setToStorage('ip-sleepData', sleepData); }, [sleepData]);
+  useEffect(() => { setToStorage('ip-finances', finances); }, [finances]);
+  useEffect(() => { setToStorage('ip-achievements', achievements); }, [achievements]);
+  useEffect(() => { setToStorage('ip-weekPlan', weekPlan); }, [weekPlan]);
+  useEffect(() => { setToStorage('ip-rewards', rewards); }, [rewards]);
+  useEffect(() => { setToStorage('ip-completedHistory', completedHistory); }, [completedHistory]);
+  useEffect(() => { setToStorage('ip-lastReset', lastResetDate); }, [lastResetDate]);
 
   const getTimeUntilReset = () => {
     const now = new Date();
@@ -270,65 +295,65 @@ const App = () => {
     });
   }, [level, addAchievement]);
 
-  // Обновляем серии для ритуалов
-  const updateStreak = useCallback((ritualKey, completed) => {
+  // Обновляем серии для привычек
+  const updateStreak = useCallback((habitKey, completed) => {
     const today = new Date().toDateString();
     setStreaks(prev => {
       const newStreaks = { ...prev };
-      if (!newStreaks[ritualKey]) {
-        newStreaks[ritualKey] = { count: 0, lastDate: null };
+      if (!newStreaks[habitKey]) {
+        newStreaks[habitKey] = { count: 0, lastDate: null };
       }
       
       if (completed) {
-        if (newStreaks[ritualKey].lastDate !== today) {
-          newStreaks[ritualKey].count += 1;
-          newStreaks[ritualKey].lastDate = today;
+        if (newStreaks[habitKey].lastDate !== today) {
+          newStreaks[habitKey].count += 1;
+          newStreaks[habitKey].lastDate = today;
           
           // Достижения за серии
-          const streakCount = newStreaks[ritualKey].count;
-          if (streakCount === 7) addAchievement(`🔥 ${ritualConfig[ritualKey].name}: 7 дней подряд!`);
-          if (streakCount === 30) addAchievement(`💎 ${ritualConfig[ritualKey].name}: месяц без перерыва!`);
+          const streakCount = newStreaks[habitKey].count;
+          if (streakCount === 7) addAchievement(`🔥 ${habitConfig[habitKey].name}: 7 дней подряд!`);
+          if (streakCount === 30) addAchievement(`💎 ${habitConfig[habitKey].name}: месяц без перерыва!`);
         }
       } else {
-        newStreaks[ritualKey].count = 0;
+        newStreaks[habitKey].count = 0;
       }
       
       return newStreaks;
     });
-  }, [addAchievement, ritualConfig]);
+  }, [addAchievement, habitConfig]);
 
-  const toggleRitual = useCallback((ritualKey) => {
-    const ritual = ritualConfig[ritualKey];
-    if (!ritual) return;
+  const toggleHabit = useCallback((habitKey) => {
+    const habit = habitConfig[habitKey];
+    if (!habit) return;
     const today = new Date().toISOString().split('T')[0];
 
-    setRituals(prevRituals => {
-      const isCurrentlyActive = prevRituals[ritualKey];
-      const newRituals = { ...prevRituals, [ritualKey]: !isCurrentlyActive };
+    setHabits(prevHabits => {
+      const isCurrentlyActive = prevHabits[habitKey];
+      const newHabits = { ...prevHabits, [habitKey]: !isCurrentlyActive };
 
       if (!isCurrentlyActive) {
-        updatePoints(ritual.points);
-        updateStreak(ritualKey, true);
+        updatePoints(habit.points);
+        updateStreak(habitKey, true);
         // Записываем в историю выполнения
         setCompletedHistory(prevHistory => {
           const dayHistory = prevHistory[today] || [];
           return {
             ...prevHistory,
             [today]: [...dayHistory, {
-              id: `ritual-${ritualKey}`,
-              text: ritual.name,
-              type: 'ritual',
-              points: ritual.points,
+              id: `habit-${habitKey}`,
+              text: habit.name,
+              type: 'habit',
+              points: habit.points,
               completedAt: new Date().toLocaleTimeString()
             }]
           };
         });
       } else {
-        setPoints(prev => Math.max(0, prev - ritual.points));
-        updateStreak(ritualKey, false);
+        setPoints(prev => Math.max(0, prev - habit.points));
+        updateStreak(habitKey, false);
         // Убираем из истории выполнения
         setCompletedHistory(prevHistory => {
-          const dayHistory = (prevHistory[today] || []).filter(h => h.id !== `ritual-${ritualKey}`);
+          const dayHistory = (prevHistory[today] || []).filter(h => h.id !== `habit-${habitKey}`);
           return {
             ...prevHistory,
             [today]: dayHistory
@@ -336,9 +361,9 @@ const App = () => {
         });
       }
 
-      return newRituals;
+      return newHabits;
     });
-  }, [ritualConfig, updatePoints, updateStreak]);
+  }, [habitConfig, updatePoints, updateStreak]);
 
   const addTask = useCallback(() => {
     if (!newTask.trim()) return;
@@ -465,7 +490,7 @@ const App = () => {
   // Экспорт данных
   const exportData = useCallback(() => {
     const data = {
-      week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, 
+      week, points, level, totalPoints, habits, streaks, dailyTasks, weeklyGoals, 
       monthlyProjects, mood, gratitude, achievements, exportDate: new Date().toISOString()
     };
     
@@ -481,22 +506,22 @@ const App = () => {
     URL.revokeObjectURL(url);
     
     addAchievement('📊 Данные экспортированы!');
-  }, [week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, monthlyProjects, mood, gratitude, achievements, addAchievement]);
+  }, [week, points, level, totalPoints, habits, streaks, dailyTasks, weeklyGoals, monthlyProjects, mood, gratitude, achievements, addAchievement]);
 
   // Сброс в новый день
   useEffect(() => {
     const checkNewDay = () => {
       const today = new Date().toDateString();
       if (today !== lastResetDate) {
-        // Сбрасываем ежедневные ритуалы
-        setRituals(prev => {
-          const newRituals = { ...prev };
-          Object.keys(ritualConfig).forEach(key => {
-            if (ritualConfig[key].time !== 'weekend') {
-              newRituals[key] = false;
+        // Сбрасываем ежедневные привычки
+        setHabits(prev => {
+          const newHabits = { ...prev };
+          Object.keys(habitConfig).forEach(key => {
+            if (habitConfig[key].time !== 'weekend') {
+              newHabits[key] = false;
             }
           });
-          return newRituals;
+          return newHabits;
         });
 
         // Сбрасываем награды по таймеру
@@ -524,7 +549,7 @@ const App = () => {
     checkNewDay();
     const interval = setInterval(checkNewDay, 60000);
     return () => clearInterval(interval);
-  }, [lastResetDate, week, ritualConfig, addAchievement]);
+  }, [lastResetDate, week, habitConfig, addAchievement]);
 
   // Свайп и клавиатура
   useEffect(() => {
@@ -563,15 +588,44 @@ const App = () => {
     };
   }, [changeScreen]);
 
-  // Компонент ритуала
-  const RitualCard = ({ ritualKey, ritual }) => {
-    const IconComponent = ritual.icon;
-    const isActive = rituals[ritualKey];
-    const streak = streaks[ritualKey]?.count || 0;
+  // Календарные функции (перенесены из case блока)
+  const getDaysInMonth = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDate = new Date(firstDay);
+    startDate.setDate(startDate.getDate() - firstDay.getDay());
+    
+    const days = [];
+    for (let d = new Date(startDate); d <= lastDay || days.length % 7 !== 0; d.setDate(d.getDate() + 1)) {
+      days.push(new Date(d));
+    }
+    return days;
+  };
+
+  const getCompletedTasksForDate = (date) => {
+    const dateString = date.toISOString().split('T')[0];
+    return completedHistory[dateString] || [];
+  };
+
+  const navigateMonth = (direction) => {
+    setCurrentMonth(prev => {
+      const newMonth = new Date(prev);
+      newMonth.setMonth(newMonth.getMonth() + direction);
+      return newMonth;
+    });
+  };
+
+  // Компонент привычки
+  const HabitCard = ({ habitKey, habit }) => {
+    const IconComponent = habit.icon;
+    const isActive = habits[habitKey];
+    const streak = streaks[habitKey]?.count || 0;
 
     return (
       <div
-        onClick={() => toggleRitual(ritualKey)}
+        onClick={() => toggleHabit(habitKey)}
         className={`group relative p-5 rounded-2xl cursor-pointer transition-all duration-300 border ${
           isActive 
             ? 'bg-neutral-900 text-white border-neutral-800 shadow-xl' 
@@ -587,18 +641,18 @@ const App = () => {
         
         <div className="flex items-start space-x-4">
           <div className={`flex-shrink-0 p-2 rounded-xl ${isActive ? 'bg-white bg-opacity-10' : 'bg-neutral-50'}`}>
-            <IconComponent className={`w-6 h-6 ${isActive ? 'text-white' : ritual.color}`} />
+            <IconComponent className={`w-6 h-6 ${isActive ? 'text-white' : habit.color}`} />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className={`font-medium text-base leading-tight mb-1 ${isActive ? 'text-white' : 'text-neutral-900'}`}>
-              {ritual.name}
+              {habit.name}
             </h4>
             <p className={`text-sm leading-relaxed mb-2 ${isActive ? 'text-neutral-300' : 'text-neutral-600'}`}>
-              {ritual.desc}
+              {habit.desc}
             </p>
             <div className="flex items-center justify-between">
               <span className={`text-sm font-medium ${isActive ? 'text-neutral-400' : 'text-neutral-500'}`}>
-                {ritual.points} очков
+                {habit.points} очков
               </span>
               {isActive && <CheckCircle className="w-5 h-5 text-green-400" />}
             </div>
@@ -610,7 +664,7 @@ const App = () => {
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 0: // Ритуалы
+      case 0: // Привычки
         return (
           <div className="space-y-8">
             {/* Прогресс и уровень */}
@@ -648,21 +702,21 @@ const App = () => {
               </div>
             </div>
 
-            {/* Ритуалы по категориям */}
+            {/* Привычки по категориям */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные ритуалы</h3>
+              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные привычки</h3>
               
               {/* Утренние */}
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌅</span>
-                  Утренние ритуалы
+                  Утренние привычки
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {Object.entries(ritualConfig)
-                    .filter(([_, ritual]) => ritual.time === 'morning')
-                    .map(([key, ritual]) => (
-                      <RitualCard key={key} ritualKey={key} ritual={ritual} />
+                  {Object.entries(habitConfig)
+                    .filter(([_, habit]) => habit.time === 'morning')
+                    .map(([key, habit]) => (
+                      <HabitCard key={key} habitKey={key} habit={habit} />
                     ))}
                 </div>
               </div>
@@ -674,10 +728,10 @@ const App = () => {
                   В течение дня
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {Object.entries(ritualConfig)
-                    .filter(([_, ritual]) => ritual.time === 'flexible' || ritual.time === 'all-day')
-                    .map(([key, ritual]) => (
-                      <RitualCard key={key} ritualKey={key} ritual={ritual} />
+                  {Object.entries(habitConfig)
+                    .filter(([_, habit]) => habit.time === 'flexible' || habit.time === 'all-day')
+                    .map(([key, habit]) => (
+                      <HabitCard key={key} habitKey={key} habit={habit} />
                     ))}
                 </div>
               </div>
@@ -686,13 +740,13 @@ const App = () => {
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌙</span>
-                  Вечерние ритуалы
+                  Вечерние привычки
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {Object.entries(ritualConfig)
-                    .filter(([_, ritual]) => ritual.time === 'evening' || ritual.time === 'night')
-                    .map(([key, ritual]) => (
-                      <RitualCard key={key} ritualKey={key} ritual={ritual} />
+                  {Object.entries(habitConfig)
+                    .filter(([_, habit]) => habit.time === 'evening' || habit.time === 'night')
+                    .map(([key, habit]) => (
+                      <HabitCard key={key} habitKey={key} habit={habit} />
                     ))}
                 </div>
               </div>
@@ -704,10 +758,10 @@ const App = () => {
                   Недельные задачи
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {Object.entries(ritualConfig)
-                    .filter(([_, ritual]) => ritual.time === 'weekend')
-                    .map(([key, ritual]) => (
-                      <RitualCard key={key} ritualKey={key} ritual={ritual} />
+                  {Object.entries(habitConfig)
+                    .filter(([_, habit]) => habit.time === 'weekend')
+                    .map(([key, habit]) => (
+                      <HabitCard key={key} habitKey={key} habit={habit} />
                     ))}
                 </div>
               </div>
@@ -961,41 +1015,9 @@ const App = () => {
         );
 
       case 3: // Календарь выполненных целей
-        const [selectedDate, setSelectedDate] = useState(null);
-        const [currentMonth, setCurrentMonth] = useState(new Date());
-        
-        // Получить дни месяца
-        const getDaysInMonth = (date) => {
-          const year = date.getFullYear();
-          const month = date.getMonth();
-          const firstDay = new Date(year, month, 1);
-          const lastDay = new Date(year, month + 1, 0);
-          const startDate = new Date(firstDay);
-          startDate.setDate(startDate.getDate() - firstDay.getDay()); // Начинаем с воскресенья
-          
-          const days = [];
-          for (let d = new Date(startDate); d <= lastDay || days.length % 7 !== 0; d.setDate(d.getDate() + 1)) {
-            days.push(new Date(d));
-          }
-          return days;
-        };
-        
         const days = getDaysInMonth(currentMonth);
         const today = new Date();
         const todayString = today.toISOString().split('T')[0];
-        
-        const getCompletedTasksForDate = (date) => {
-          const dateString = date.toISOString().split('T')[0];
-          return completedHistory[dateString] || [];
-        };
-        
-        const navigateMonth = (direction) => {
-          setCurrentMonth(prev => {
-            const newMonth = new Date(prev);
-            newMonth.setMonth(newMonth.getMonth() + direction);
-            return newMonth;
-          });
-        };
 
         return (
           <div className="space-y-8">
@@ -1004,7 +1026,7 @@ const App = () => {
               <div className="flex items-center justify-between mb-8">
                 <div>
                   <h3 className="text-2xl font-light text-neutral-900">Календарь достижений</h3>
-                  <p className="text-neutral-600 font-light">История выполненных задач и ритуалов</p>
+                  <p className="text-neutral-600 font-light">История выполненных задач и привычек</p>
                 </div>
                 
                 <div className="flex items-center space-x-4">
@@ -1112,11 +1134,11 @@ const App = () => {
                     <div key={index} className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
                       <div className="flex items-center space-x-3">
                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                          item.type === 'ritual' ? 'bg-blue-100' :
+                          item.type === 'habit' ? 'bg-blue-100' :
                           item.type === 'daily' ? 'bg-emerald-100' :
                           item.type === 'weekly' ? 'bg-purple-100' : 'bg-orange-100'
                         }`}>
-                          {item.type === 'ritual' ? <Trophy className="w-4 h-4 text-blue-600" /> :
+                          {item.type === 'habit' ? <Trophy className="w-4 h-4 text-blue-600" /> :
                            item.type === 'daily' ? <CheckCircle className="w-4 h-4 text-emerald-600" /> :
                            item.type === 'weekly' ? <Target className="w-4 h-4 text-purple-600" /> :
                            <Star className="w-4 h-4 text-orange-600" />}
@@ -1234,7 +1256,7 @@ const App = () => {
                     { label: 'Очки накоплено', value: points },
                     { label: 'Всего очков заработано', value: totalPoints },
                     { label: 'Текущая неделя', value: week },
-                    { label: 'Выполнено ритуалов сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
+                    { label: 'Выполнено привычек сегодня', value: `${Object.values(habits).filter(Boolean).length}/20` },
                     { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals, ...monthlyProjects].filter(t => !t.completed).length },
                     { label: 'Настроение сегодня', value: `${mood}/10` }
                   ].map((item, i) => (
@@ -1256,9 +1278,9 @@ const App = () => {
                       {topStreaks.length === 0 ? (
                         <p className="text-neutral-500 font-light text-sm">Серий пока нет</p>
                       ) : (
-                        topStreaks.map(([ritualKey, streak]) => (
-                          <div key={ritualKey} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                            <span className="text-sm text-neutral-700">{ritualConfig[ritualKey]?.name}</span>
+                        topStreaks.map(([habitKey, streak]) => (
+                          <div key={habitKey} className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                            <span className="text-sm text-neutral-700">{habitConfig[habitKey]?.name}</span>
                             <span className="text-sm font-medium text-orange-600">{streak.count} дней</span>
                           </div>
                         ))
@@ -1296,7 +1318,7 @@ const App = () => {
                 <div>
                   <h5 className="font-medium text-neutral-800 mb-2">Ежедневный сброс (00:00)</h5>
                   <ul className="space-y-1">
-                    <li>• Ежедневные ритуалы сбрасываются</li>
+                    <li>• Ежедневные привычки сбрасываются</li>
                     <li>• Недельные и месячные цели остаются</li>
                     <li>• Очки и уровень сохраняются</li>
                     <li>• Серии продолжаются при выполнении</li>
