@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, Eye, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X, Smile, Download, Flame, TrendingUp, Moon, DollarSign } from 'lucide-react';
+import { Star, Trophy, Target, Calendar, Zap, CheckCircle, Plus, BarChart3, Clock, BookOpen, Dumbbell, Droplets, Coffee, Bed, Brain, Heart, Gift, Award, ChevronLeft, ChevronRight, RotateCcw, HelpCircle, X, Smile, Download, Flame, TrendingUp, DollarSign } from 'lucide-react';
 
 // Интерактивный глаз компонент
 const InteractiveEye = ({ scale = 1 }) => {
@@ -48,173 +48,7 @@ const InteractiveEye = ({ scale = 1 }) => {
   );
 };
 
-// Компонент медитации
-const MeditationScreen = () => {
-  const [isActive, setIsActive] = useState(false);
-  const [duration, setDuration] = useState(5);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [lilyColor, setLilyColor] = useState('white');
-  const [leaves, setLeaves] = useState([]);
-
-  useEffect(() => {
-    let interval;
-    if (isActive && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0 && isActive) {
-      setIsActive(false);
-    }
-    return () => clearInterval(interval);
-  }, [isActive, timeLeft]);
-
-  // Генерация падающих листьев
-  useEffect(() => {
-    if (isActive) {
-      const interval = setInterval(() => {
-        const newLeaf = {
-          id: Date.now(),
-          left: Math.random() * 100,
-          animationDuration: 3 + Math.random() * 2,
-          size: 20 + Math.random() * 10
-        };
-        setLeaves(prev => [...prev.slice(-10), newLeaf]);
-      }, 800);
-      return () => clearInterval(interval);
-    }
-  }, [isActive]);
-
-  const startMeditation = () => {
-    setTimeLeft(duration * 60);
-    setIsActive(true);
-  };
-
-  const stopMeditation = () => {
-    setIsActive(false);
-    setTimeLeft(0);
-  };
-
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  return (
-    <div className="relative min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 overflow-hidden">
-      {/* Падающие листья */}
-      {leaves.map(leaf => (
-        <div
-          key={leaf.id}
-          className="absolute text-green-200 opacity-60 pointer-events-none"
-          style={{
-            left: `${leaf.left}%`,
-            fontSize: `${leaf.size}px`,
-            animation: `fall ${leaf.animationDuration}s linear`,
-            top: '-50px'
-          }}
-        >
-          🍃
-        </div>
-      ))}
-
-      {/* Белые лилии внизу */}
-      <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-4 pb-8">
-        {[...Array(5)].map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setLilyColor(lilyColor === 'white' ? 'red' : 'white')}
-            className="text-4xl transition-all duration-500 transform hover:scale-110"
-            style={{ 
-              filter: lilyColor === 'red' ? 'hue-rotate(340deg) saturate(2)' : 'none',
-              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            🌸
-          </button>
-        ))}
-      </div>
-
-      {/* Основной интерфейс медитации */}
-      <div className="flex flex-col items-center justify-center min-h-screen p-8">
-        <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-lg p-8 text-center max-w-md w-full">
-          <h2 className="text-2xl font-light text-neutral-900 mb-6">Медитация</h2>
-          
-          {!isActive ? (
-            <div className="space-y-6">
-              <div className="space-y-4">
-                <label className="block text-neutral-700 font-light">Длительность</label>
-                <div className="flex justify-center space-x-4">
-                  {[1, 3, 5, 10, 15].map(mins => (
-                    <button
-                      key={mins}
-                      onClick={() => setDuration(mins)}
-                      className={`px-4 py-2 rounded-xl transition-all ${
-                        duration === mins 
-                          ? 'bg-neutral-900 text-white' 
-                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
-                      }`}
-                    >
-                      {mins}м
-                    </button>
-                  ))}
-                </div>
-              </div>
-              
-              <button
-                onClick={startMeditation}
-                className="bg-neutral-900 text-white px-8 py-3 rounded-2xl hover:bg-neutral-800 transition-colors font-light"
-              >
-                Начать медитацию
-              </button>
-              
-              <div className="text-sm text-neutral-600 font-light space-y-2 mt-6">
-                <p>• Найдите тихое место</p>
-                <p>• Сядьте удобно, закройте глаза</p>
-                <p>• Сосредоточьтесь на дыхании</p>
-                <p>• Позвольте мыслям приходить и уходить</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              <div className="text-6xl font-extralight text-neutral-900">
-                {formatTime(timeLeft)}
-              </div>
-              
-              <div className="text-neutral-600 font-light">
-                <p className="mb-4">Дышите спокойно и глубоко</p>
-                <div className="w-full bg-neutral-200 rounded-full h-1">
-                  <div 
-                    className="bg-neutral-900 h-1 rounded-full transition-all duration-1000"
-                    style={{ width: `${((duration * 60 - timeLeft) / (duration * 60)) * 100}%` }}
-                  />
-                </div>
-              </div>
-              
-              <button
-                onClick={stopMeditation}
-                className="bg-neutral-100 text-neutral-700 px-6 py-2 rounded-xl hover:bg-neutral-200 transition-colors font-light"
-              >
-                Завершить
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <style jsx>{`
-        @keyframes fall {
-          from {
-            transform: translateY(-100px) rotate(0deg);
-          }
-          to {
-            transform: translateY(100vh) rotate(360deg);
-          }
-        }
-      `}</style>
-    </div>
-  );
-};
+// Компонент кнопки справки
 const HelpButton = () => {
   const [showHelp, setShowHelp] = useState(false);
 
@@ -222,45 +56,45 @@ const HelpButton = () => {
     <>
       <button
         onClick={() => setShowHelp(true)}
-        className="fixed bottom-6 right-6 w-10 h-10 bg-white border border-neutral-300 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all opacity-60 hover:opacity-100 z-40"
+        className="fixed bottom-6 right-6 w-12 h-12 bg-white border border-neutral-300 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-all opacity-70 hover:opacity-100 z-40 animate-pulse hover:animate-none"
         title="Информация о приватности и использовании"
       >
-        <HelpCircle className="w-5 h-5 text-neutral-600" />
+        <HelpCircle className="w-6 h-6 text-neutral-600" />
       </button>
 
       {showHelp && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50" onClick={() => setShowHelp(false)}>
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-medium text-neutral-900">О системе i.p</h2>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="p-8">
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-2xl font-medium text-neutral-900">О системе i.p</h2>
                 <button
                   onClick={() => setShowHelp(false)}
                   className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
                 >
-                  <X className="w-4 h-4 text-neutral-600" />
+                  <X className="w-5 h-5 text-neutral-600" />
                 </button>
               </div>
 
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-neutral-800 mb-3 flex items-center">
-                  <span className="text-xl mr-2">🔒</span>
-                  Ваши данные в безопасности
+              <div className="mb-8">
+                <h3 className="text-lg font-medium text-neutral-800 mb-4 flex items-center">
+                  <span className="text-2xl mr-3">🔒</span>
+                  Ваши данные в полной безопасности
                 </h3>
-                <div className="space-y-2 text-sm text-neutral-600 font-light bg-neutral-50 rounded-xl p-4">
-                  <p>• Все данные хранятся только у вас в браузере</p>
-                  <p>• Никакая информация не отправляется на серверы</p>
-                  <p>• Работает полностью офлайн после загрузки</p>
-                  <p>• Данные сохраняются между сессиями</p>
+                <div className="space-y-3 text-sm text-neutral-600 font-light bg-neutral-50 rounded-xl p-6">
+                  <p>✅ <strong>Все данные хранятся только у вас</strong> в браузере на устройстве</p>
+                  <p>✅ <strong>Никакая информация не отправляется</strong> на серверы или третьим лицам</p>
+                  <p>✅ <strong>Работает полностью офлайн</strong> после первой загрузки страницы</p>
+                  <p>✅ <strong>Данные сохраняются между сессиями</strong> в localStorage браузера</p>
                 </div>
               </div>
 
               <div className="text-center">
                 <button
                   onClick={() => setShowHelp(false)}
-                  className="bg-neutral-900 text-white px-6 py-2 rounded-xl hover:bg-neutral-800 transition-colors font-medium text-sm"
+                  className="bg-neutral-900 text-white px-8 py-3 rounded-xl hover:bg-neutral-800 transition-colors font-medium"
                 >
-                  Понятно!
+                  Понятно, начинаем!
                 </button>
               </div>
             </div>
@@ -280,7 +114,7 @@ const App = () => {
   const [totalPoints, setTotalPoints] = useState(() => parseInt(localStorage.getItem('ip-totalPoints') || '0'));
   const [lastResetDate, setLastResetDate] = useState(() => localStorage.getItem('ip-lastReset') || new Date().toDateString());
   
-  // Ритуалы и серии
+  // Привычки и серии
   const [rituals, setRituals] = useState(() => {
     const saved = localStorage.getItem('ip-rituals');
     if (saved) return JSON.parse(saved);
@@ -300,7 +134,6 @@ const App = () => {
   // Задачи разных типов
   const [dailyTasks, setDailyTasks] = useState(() => JSON.parse(localStorage.getItem('ip-dailyTasks') || '[]'));
   const [weeklyGoals, setWeeklyGoals] = useState(() => JSON.parse(localStorage.getItem('ip-weeklyGoals') || '[]'));
-  const [monthlyProjects, setMonthlyProjects] = useState(() => JSON.parse(localStorage.getItem('ip-monthlyProjects') || '[]'));
   const [completedTasks, setCompletedTasks] = useState(() => JSON.parse(localStorage.getItem('ip-completedTasks') || '[]'));
   
   const [newTask, setNewTask] = useState('');
@@ -309,13 +142,7 @@ const App = () => {
 
   // Трекеры
   const [mood, setMood] = useState(() => parseInt(localStorage.getItem('ip-todayMood') || '5'));
-  const [gratitude, setGratitude] = useState(() => JSON.parse(localStorage.getItem('ip-gratitude') || '[]'));
-  const [newGratitude, setNewGratitude] = useState('');
-  const [sleepData, setSleepData] = useState(() => JSON.parse(localStorage.getItem('ip-sleepData') || '{}'));
-  const [finances, setFinances] = useState(() => JSON.parse(localStorage.getItem('ip-finances') || '[]'));
-
   const [achievements, setAchievements] = useState(() => JSON.parse(localStorage.getItem('ip-achievements') || '[]'));
-  const [weekPlan, setWeekPlan] = useState(() => JSON.parse(localStorage.getItem('ip-weekPlan') || '{}'));
   const [rewards, setRewards] = useState(() => {
     const saved = localStorage.getItem('ip-rewards');
     if (saved) return JSON.parse(saved);
@@ -326,12 +153,10 @@ const App = () => {
       { id: 4, name: 'Ужин в ресторане', cost: 60, claimed: false, resetDays: 7 },
       { id: 5, name: 'Новая вещь', cost: 70, claimed: false, resetDays: 14 },
       { id: 6, name: '2 часа ничего не делать', cost: 30, claimed: false, resetDays: 1 },
-      { id: 7, name: 'Поесть что хочется', cost: 25, claimed: false, resetDays: 2 },
-      { id: 8, name: 'День без планов', cost: 50, claimed: false, resetDays: 7 },
     ];
   });
 
-  // Конфигурация ритуалов
+  // Конфигурация привычек
   const ritualConfig = {
     wakeup: { name: 'Подъём в срок', points: 2, icon: Clock, color: 'text-blue-600', time: 'morning', desc: 'В одно время' },
     brush_morning: { name: 'Почистить зубы', points: 1, icon: Star, color: 'text-emerald-500', time: 'morning', desc: 'Утром' },
@@ -358,19 +183,10 @@ const App = () => {
     week_review: { name: 'Итоги недели', points: 6, icon: Trophy, color: 'text-yellow-500', time: 'weekend', desc: 'Анализ' }
   };
 
-  const financialBonuses = [
-    { id: 1, name: 'Получил доход', points: 100, desc: 'Любой заработок' },
-    { id: 2, name: 'Крупная сделка', points: 200, desc: 'Большая сумма' },
-    { id: 3, name: 'Инвестиция окупилась', points: 150, desc: 'Прибыль от инвестиций' },
-  ];
-
   const screens = [
     { name: 'Привычки', icon: Trophy },
     { name: 'Цели', icon: Target },
-    { name: 'Трекеры', icon: TrendingUp },
     { name: 'История', icon: Calendar },
-    { name: 'Медитация', icon: Brain },
-    { name: 'Планирование', icon: Clock },  
     { name: 'Награды', icon: Gift },
     { name: 'Статистика', icon: BarChart3 }
   ];
@@ -391,14 +207,9 @@ const App = () => {
   useEffect(() => { localStorage.setItem('ip-streaks', JSON.stringify(streaks)); }, [streaks]);
   useEffect(() => { localStorage.setItem('ip-dailyTasks', JSON.stringify(dailyTasks)); }, [dailyTasks]);
   useEffect(() => { localStorage.setItem('ip-weeklyGoals', JSON.stringify(weeklyGoals)); }, [weeklyGoals]);
-  useEffect(() => { localStorage.setItem('ip-monthlyProjects', JSON.stringify(monthlyProjects)); }, [monthlyProjects]);
   useEffect(() => { localStorage.setItem('ip-completedTasks', JSON.stringify(completedTasks)); }, [completedTasks]);
   useEffect(() => { localStorage.setItem('ip-todayMood', mood.toString()); }, [mood]);
-  useEffect(() => { localStorage.setItem('ip-gratitude', JSON.stringify(gratitude)); }, [gratitude]);
-  useEffect(() => { localStorage.setItem('ip-sleepData', JSON.stringify(sleepData)); }, [sleepData]);
-  useEffect(() => { localStorage.setItem('ip-finances', JSON.stringify(finances)); }, [finances]);
   useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
-  useEffect(() => { localStorage.setItem('ip-weekPlan', JSON.stringify(weekPlan)); }, [weekPlan]);
   useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
   useEffect(() => { localStorage.setItem('ip-lastReset', lastResetDate); }, [lastResetDate]);
 
@@ -438,7 +249,7 @@ const App = () => {
     });
   }, [level, addAchievement]);
 
-  // Обновляем серии для ритуалов
+  // Обновляем серии для привычек
   const updateStreak = useCallback((ritualKey, completed) => {
     const today = new Date().toDateString();
     setStreaks(prev => {
@@ -452,7 +263,6 @@ const App = () => {
           newStreaks[ritualKey].count += 1;
           newStreaks[ritualKey].lastDate = today;
           
-          // Достижения за серии
           const streakCount = newStreaks[ritualKey].count;
           if (streakCount === 7) addAchievement(`🔥 ${ritualConfig[ritualKey].name}: 7 дней подряд!`);
           if (streakCount === 30) addAchievement(`💎 ${ritualConfig[ritualKey].name}: месяц без перерыва!`);
@@ -500,8 +310,6 @@ const App = () => {
       setDailyTasks(prev => [...prev, task]);
     } else if (taskType === 'weekly') {
       setWeeklyGoals(prev => [...prev, task]);
-    } else if (taskType === 'monthly') {
-      setMonthlyProjects(prev => [...prev, task]);
     }
     
     setNewTask('');
@@ -516,7 +324,6 @@ const App = () => {
       const newTasks = [...prevTasks];
 
       if (!task.completed) {
-        // Задача выполняется - добавляем в архив и даем очки
         const completedTask = {
           ...task,
           completed: true,
@@ -527,10 +334,8 @@ const App = () => {
         setCompletedTasks(prev => [completedTask, ...prev]);
         updatePoints(task.priority);
         
-        // Убираем задачу из текущего списка
         return newTasks.filter(t => t.id !== taskId);
       } else {
-        // Задача снимается с выполнения (только если еще в списке)
         newTasks[taskIndex] = { ...task, completed: false };
         setPoints(prev => Math.max(0, prev - task.priority));
         return newTasks;
@@ -541,23 +346,8 @@ const App = () => {
       setDailyTasks(toggleTaskInArray);
     } else if (taskType === 'weekly') {
       setWeeklyGoals(toggleTaskInArray);
-    } else if (taskType === 'monthly') {
-      setMonthlyProjects(toggleTaskInArray);
     }
   }, [updatePoints]);
-
-  const addGratitude = useCallback(() => {
-    if (!newGratitude.trim()) return;
-    
-    const gratitudeItem = {
-      id: Date.now(),
-      text: newGratitude.trim(),
-      date: new Date().toDateString()
-    };
-    
-    setGratitude(prev => [...prev, gratitudeItem]);
-    setNewGratitude('');
-  }, [newGratitude]);
 
   const claimReward = useCallback((rewardId) => {
     setRewards(prevRewards => {
@@ -577,14 +367,6 @@ const App = () => {
     });
   }, [points, addAchievement]);
 
-  const addFinancialBonus = useCallback((bonusId) => {
-    const bonus = financialBonuses.find(b => b.id === bonusId);
-    if (!bonus) return;
-
-    updatePoints(bonus.points);
-    addAchievement(`💰 ${bonus.name}: +${bonus.points} очков!`);
-  }, [addAchievement, updatePoints]);
-
   const changeScreen = useCallback((direction) => {
     setCurrentScreen(prev => {
       if (direction === 'next') {
@@ -599,7 +381,7 @@ const App = () => {
   const exportData = useCallback(() => {
     const data = {
       week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, 
-      monthlyProjects, mood, gratitude, achievements, exportDate: new Date().toISOString()
+      mood, achievements, exportDate: new Date().toISOString()
     };
     
     const dataStr = JSON.stringify(data, null, 2);
@@ -614,50 +396,7 @@ const App = () => {
     URL.revokeObjectURL(url);
     
     addAchievement('📊 Данные экспортированы!');
-  }, [week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, monthlyProjects, mood, gratitude, achievements, addAchievement]);
-
-  // Сброс в новый день
-  useEffect(() => {
-    const checkNewDay = () => {
-      const today = new Date().toDateString();
-      if (today !== lastResetDate) {
-        // Сбрасываем ежедневные ритуалы
-        setRituals(prev => {
-          const newRituals = { ...prev };
-          Object.keys(ritualConfig).forEach(key => {
-            if (ritualConfig[key].time !== 'weekend') {
-              newRituals[key] = false;
-            }
-          });
-          return newRituals;
-        });
-
-        // Сбрасываем награды по таймеру
-        setRewards(prev => prev.map(reward => {
-          if (reward.claimed && reward.claimedAt) {
-            const daysSinceClaimed = Math.floor((Date.now() - reward.claimedAt) / (24 * 60 * 60 * 1000));
-            if (daysSinceClaimed >= reward.resetDays) {
-              return { ...reward, claimed: false, claimedAt: null };
-            }
-          }
-          return reward;
-        }));
-
-        setLastResetDate(today);
-        
-        if (new Date().getDay() === 1) {
-          setWeek(prev => prev + 1);
-          addAchievement(`🎯 Неделя ${week + 1} началась!`);
-        } else {
-          addAchievement('🌅 Новый день!');
-        }
-      }
-    };
-
-    checkNewDay();
-    const interval = setInterval(checkNewDay, 60000);
-    return () => clearInterval(interval);
-  }, [lastResetDate, week, ritualConfig, addAchievement]);
+  }, [week, points, level, totalPoints, rituals, streaks, dailyTasks, weeklyGoals, mood, achievements, addAchievement]);
 
   // Свайп и клавиатура
   useEffect(() => {
@@ -696,7 +435,48 @@ const App = () => {
     };
   }, [changeScreen]);
 
-  // Компонент ритуала
+  // Сброс в новый день
+  useEffect(() => {
+    const checkNewDay = () => {
+      const today = new Date().toDateString();
+      if (today !== lastResetDate) {
+        setRituals(prev => {
+          const newRituals = { ...prev };
+          Object.keys(ritualConfig).forEach(key => {
+            if (ritualConfig[key].time !== 'weekend') {
+              newRituals[key] = false;
+            }
+          });
+          return newRituals;
+        });
+
+        setRewards(prev => prev.map(reward => {
+          if (reward.claimed && reward.claimedAt) {
+            const daysSinceClaimed = Math.floor((Date.now() - reward.claimedAt) / (24 * 60 * 60 * 1000));
+            if (daysSinceClaimed >= reward.resetDays) {
+              return { ...reward, claimed: false, claimedAt: null };
+            }
+          }
+          return reward;
+        }));
+
+        setLastResetDate(today);
+        
+        if (new Date().getDay() === 1) {
+          setWeek(prev => prev + 1);
+          addAchievement(`🎯 Неделя ${week + 1} началась!`);
+        } else {
+          addAchievement('🌅 Новый день!');
+        }
+      }
+    };
+
+    checkNewDay();
+    const interval = setInterval(checkNewDay, 60000);
+    return () => clearInterval(interval);
+  }, [lastResetDate, week, ritualConfig, addAchievement]);
+
+  // Компонент привычки
   const RitualCard = ({ ritualKey, ritual }) => {
     const IconComponent = ritual.icon;
     const isActive = rituals[ritualKey];
@@ -743,10 +523,9 @@ const App = () => {
 
   const renderScreen = () => {
     switch (currentScreen) {
-      case 0: // Ритуалы
+      case 0: // Привычки
         return (
           <div className="space-y-8">
-            {/* Прогресс и уровень */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
                 <div className="flex items-center space-x-4">
@@ -766,26 +545,11 @@ const App = () => {
                   </div>
                 </div>
               </div>
-              
-              <div>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm font-medium text-neutral-600">Недельный прогресс</span>
-                  <span className="text-sm font-medium text-neutral-600">{points} / {maxPoints}</span>
-                </div>
-                <div className="w-full bg-neutral-100 rounded-full h-2">
-                  <div 
-                    className="bg-gradient-to-r from-neutral-600 to-neutral-800 h-2 rounded-full transition-all duration-700"
-                    style={{ width: `${weekProgress}%` }}
-                  />
-                </div>
-              </div>
             </div>
 
-            {/* Привычки по категориям */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные привычки</h3>
               
-              {/* Утренние */}
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌅</span>
@@ -800,7 +564,6 @@ const App = () => {
                 </div>
               </div>
 
-              {/* В течение дня */}
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">⏰</span>
@@ -815,7 +578,6 @@ const App = () => {
                 </div>
               </div>
 
-              {/* Вечерние */}
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌙</span>
@@ -830,7 +592,6 @@ const App = () => {
                 </div>
               </div>
 
-              {/* Недельные */}
               <div>
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🏖️</span>
@@ -844,39 +605,6 @@ const App = () => {
                     ))}
                 </div>
               </div>
-            {/* История выполненных задач */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
-                <CheckCircle className="w-6 h-6 mr-3 text-green-500" />
-                История выполненных задач
-              </h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {completedTasks.length === 0 ? (
-                  <p className="text-neutral-500 font-light">Выполненных задач пока нет</p>
-                ) : (
-                  completedTasks.slice(0, 15).map(task => {
-                    const completedDate = new Date(task.completedAt).toLocaleDateString('ru-RU');
-                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : task.taskType === 'weekly' ? 'Неделя' : 'Месяц';
-                    
-                    return (
-                      <div key={task.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-neutral-900 font-light">{task.text}</span>
-                          <div className="flex items-center space-x-2 text-xs">
-                            <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full">
-                              {taskTypeLabel}
-                            </span>
-                            <span className="text-neutral-500">{completedDate}</span>
-                            <span className="bg-green-600 text-white px-2 py-1 rounded-full">
-                              +{task.priority}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
             </div>
           </div>
         );
@@ -884,7 +612,6 @@ const App = () => {
       case 1: // Цели
         return (
           <div className="space-y-8">
-            {/* Добавление задач */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-2xl font-light text-neutral-900 mb-8">Добавить цель</h3>
               
@@ -905,7 +632,6 @@ const App = () => {
                   >
                     <option value="daily">Сегодня</option>
                     <option value="weekly">Эта неделя</option>
-                    <option value="monthly">Этот месяц</option>
                   </select>
                   <select
                     value={taskPriority}
@@ -927,7 +653,6 @@ const App = () => {
               </div>
             </div>
 
-            {/* Ежедневные задачи */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
                 <span className="text-2xl mr-3">📋</span>
@@ -941,21 +666,14 @@ const App = () => {
                     <div
                       key={task.id}
                       onClick={() => toggleTask(task.id, 'daily')}
-                      className={`p-4 rounded-xl cursor-pointer transition-all border ${
-                        task.completed
-                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
-                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
-                      }`}
+                      className="p-4 rounded-xl cursor-pointer transition-all border bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300"
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
-                          {task.text}
-                        </span>
+                        <span className="font-light text-neutral-900">{task.text}</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs bg-neutral-100 text-neutral-600 px-2 py-1 rounded-full">
                             {task.priority} очк
                           </span>
-                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
                         </div>
                       </div>
                     </div>
@@ -964,7 +682,6 @@ const App = () => {
               </div>
             </div>
 
-            {/* Недельные цели */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
                 <span className="text-2xl mr-3">🎯</span>
@@ -978,58 +695,14 @@ const App = () => {
                     <div
                       key={task.id}
                       onClick={() => toggleTask(task.id, 'weekly')}
-                      className={`p-4 rounded-xl cursor-pointer transition-all border border-l-4 border-l-blue-400 ${
-                        task.completed
-                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
-                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
-                      }`}
+                      className="p-4 rounded-xl cursor-pointer transition-all border border-l-4 border-l-blue-400 bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300"
                     >
                       <div className="flex items-center justify-between">
-                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
-                          {task.text}
-                        </span>
+                        <span className="font-light text-neutral-900">{task.text}</span>
                         <div className="flex items-center space-x-2">
                           <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded-full">
                             {task.priority} очк
                           </span>
-                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Месячные проекты */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
-                <span className="text-2xl mr-3">🚀</span>
-                Проекты на месяц
-              </h3>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {monthlyProjects.length === 0 ? (
-                  <p className="text-neutral-500 font-light">Месячных проектов нет</p>
-                ) : (
-                  monthlyProjects.map(task => (
-                    <div
-                      key={task.id}
-                      onClick={() => toggleTask(task.id, 'monthly')}
-                      className={`p-4 rounded-xl cursor-pointer transition-all border border-l-4 border-l-purple-400 ${
-                        task.completed
-                          ? 'bg-neutral-50 border-neutral-200 opacity-60'
-                          : 'bg-white border-neutral-200 hover:shadow-md hover:border-neutral-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className={`font-light ${task.completed ? 'line-through text-neutral-500' : 'text-neutral-900'}`}>
-                          {task.text}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded-full">
-                            {task.priority} очк
-                          </span>
-                          {task.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
                         </div>
                       </div>
                     </div>
@@ -1040,170 +713,9 @@ const App = () => {
           </div>
         );
 
-      case 2: // Трекеры
+      case 2: // История
         return (
           <div className="space-y-8">
-            {/* Настроение */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
-                <Smile className="w-6 h-6 mr-3 text-yellow-500" />
-                Настроение сегодня
-              </h3>
-              <div className="flex items-center space-x-4 mb-4">
-                <span className="text-sm text-neutral-600">Ужасно</span>
-                <input
-                  type="range"
-                  min="1"
-                  max="10"
-                  value={mood}
-                  onChange={(e) => setMood(parseInt(e.target.value))}
-                  className="flex-1"
-                />
-                <span className="text-sm text-neutral-600">Отлично</span>
-              </div>
-              <div className="text-center">
-                <span className="text-3xl font-light text-neutral-900">{mood}/10</span>
-                <p className="text-sm text-neutral-600 mt-1">
-                  {mood <= 3 ? 'Трудный день' : mood <= 6 ? 'Нормально' : mood <= 8 ? 'Хорошо' : 'Превосходно'}
-                </p>
-              </div>
-            </div>
-
-            {/* Журнал благодарностей */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
-                <Heart className="w-6 h-6 mr-3 text-pink-500" />
-                Благодарности
-              </h3>
-              <div className="flex gap-4 mb-6">
-                <input
-                  type="text"
-                  value={newGratitude}
-                  onChange={(e) => setNewGratitude(e.target.value)}
-                  placeholder="За что вы благодарны сегодня?"
-                  className="flex-1 p-3 border border-neutral-200 rounded-xl focus:border-neutral-400 focus:outline-none text-sm font-light placeholder-neutral-400"
-                  onKeyPress={(e) => e.key === 'Enter' && addGratitude()}
-                />
-                <button
-                  onClick={addGratitude}
-                  className="bg-pink-500 text-white px-4 py-3 rounded-xl hover:bg-pink-600 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {gratitude.slice(-5).reverse().map(item => (
-                  <div key={item.id} className="bg-pink-50 rounded-lg p-3">
-                    <p className="text-sm text-neutral-700">{item.text}</p>
-                    <p className="text-xs text-neutral-500 mt-1">{item.date}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Финансовые достижения */}
-            <div className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-3xl p-8 text-white">
-              <h3 className="text-xl font-medium mb-2 flex items-center">
-                <DollarSign className="w-6 h-6 mr-3" />
-                Финансовые достижения
-              </h3>
-              <p className="text-emerald-100 font-light mb-6">Отмечайте доходы и успехи</p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {financialBonuses.map(bonus => (
-                  <button
-                    key={bonus.id}
-                    onClick={() => addFinancialBonus(bonus.id)}
-                    className="bg-white bg-opacity-10 border border-white border-opacity-20 rounded-xl p-4 text-left hover:bg-opacity-20 transition-all"
-                  >
-                    <h4 className="font-medium mb-1">{bonus.name}</h4>
-                    <p className="text-emerald-100 text-sm font-light mb-2">{bonus.desc}</p>
-                    <p className="text-white font-medium text-sm">+{bonus.points} очков</p>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case 3: // История и календарь
-        const today = new Date();
-        const currentMonth = today.getMonth();
-        const currentYear = today.getFullYear();
-        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-        const monthName = today.toLocaleString('ru-RU', { month: 'long' });
-
-        // Группируем выполненные задачи по дням
-        const tasksByDate = {};
-        completedTasks.forEach(task => {
-          const date = new Date(task.completedAt).toDateString();
-          if (!tasksByDate[date]) tasksByDate[date] = [];
-          tasksByDate[date].push(task);
-        });
-
-        return (
-          <div className="space-y-8">
-            {/* Календарь с историей */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8 text-center">
-                История выполнения • {monthName} {currentYear}
-              </h3>
-
-              {/* Календарь */}
-              <div className="max-w-2xl mx-auto">
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
-                    <div key={day} className="text-center font-medium text-neutral-600 p-2">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7 gap-2">
-                  {/* Пустые дни в начале месяца */}
-                  {[...Array(firstDay === 0 ? 6 : firstDay - 1)].map((_, i) => (
-                    <div key={`empty-${i}`} className="h-16"></div>
-                  ))}
-                  
-                  {/* Дни месяца */}
-                  {[...Array(daysInMonth)].map((_, i) => {
-                    const day = i + 1;
-                    const date = new Date(currentYear, currentMonth, day);
-                    const dateString = date.toDateString();
-                    const tasksForDay = tasksByDate[dateString] || [];
-                    const isToday = date.toDateString() === today.toDateString();
-                    
-                    return (
-                      <div
-                        key={day}
-                        className={`h-16 p-2 rounded-xl border transition-all ${
-                          isToday 
-                            ? 'border-neutral-900 bg-neutral-50' 
-                            : tasksForDay.length > 0 
-                              ? 'border-green-200 bg-green-50 hover:bg-green-100' 
-                              : 'border-neutral-200 hover:border-neutral-300'
-                        }`}
-                      >
-                        <div className="text-sm font-medium text-neutral-900 mb-1">
-                          {day}
-                        </div>
-                        {tasksForDay.length > 0 && (
-                          <div className="flex items-center justify-center">
-                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                            <span className="text-xs text-green-600 ml-1">
-                              {tasksForDay.length}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* История выполненных задач */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
               <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
                 <CheckCircle className="w-6 h-6 mr-3 text-green-500" />
@@ -1215,7 +727,6 @@ const App = () => {
                   <div className="text-center py-8">
                     <div className="text-6xl mb-4">📋</div>
                     <p className="text-neutral-500 font-light">Выполненных задач пока нет</p>
-                    <p className="text-sm text-neutral-400 mt-2">Завершите задачи чтобы увидеть их здесь</p>
                   </div>
                 ) : (
                   completedTasks.slice(0, 20).map(task => {
@@ -1225,11 +736,8 @@ const App = () => {
                       hour: '2-digit', 
                       minute: '2-digit' 
                     });
-                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : 
-                                         task.taskType === 'weekly' ? 'Неделя' : 'Месяц';
-                    const taskTypeColor = task.taskType === 'daily' ? 'bg-blue-100 text-blue-600' : 
-                                         task.taskType === 'weekly' ? 'bg-purple-100 text-purple-600' : 
-                                         'bg-orange-100 text-orange-600';
+                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : 'Неделя';
+                    const taskTypeColor = task.taskType === 'daily' ? 'bg-blue-100 text-blue-600' : 'bg-purple-100 text-purple-600';
                     
                     return (
                       <div key={task.id} className="p-4 rounded-xl bg-green-50 border border-green-200">
@@ -1254,91 +762,11 @@ const App = () => {
                   })
                 )}
               </div>
-              
-              {completedTasks.length > 20 && (
-                <div className="text-center mt-6">
-                  <p className="text-sm text-neutral-500">
-                    Показано 20 из {completedTasks.length} выполненных задач
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Общая статистика */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center">
-                <div className="text-3xl font-light text-blue-600 mb-2">
-                  {completedTasks.filter(t => t.taskType === 'daily').length}
-                </div>
-                <p className="text-blue-600 font-medium">Ежедневных задач</p>
-              </div>
-              
-              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6 text-center">
-                <div className="text-3xl font-light text-purple-600 mb-2">
-                  {completedTasks.filter(t => t.taskType === 'weekly').length}
-                </div>
-                <p className="text-purple-600 font-medium">Недельных целей</p>
-              </div>
-              
-              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 text-center">
-                <div className="text-3xl font-light text-orange-600 mb-2">
-                  {completedTasks.filter(t => t.taskType === 'monthly').length}
-                </div>
-                <p className="text-orange-600 font-medium">Месячных проектов</p>
-              </div>
             </div>
           </div>
         );
 
-      case 4: // Медитация
-        return <MeditationScreen />;
-
-      case 5: // Планирование
-        const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-        const hours = Array.from({ length: 16 }, (_, i) => i + 6);
-
-        return (
-          <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-            <h3 className="text-2xl font-light text-neutral-900 mb-8">Планирование недели</h3>
-            
-            <div className="overflow-x-auto">
-              <div className="min-w-full" style={{ minWidth: '700px' }}>
-                <div className="grid grid-cols-8 gap-2 mb-4">
-                  <div className="p-3 text-center font-medium text-neutral-700">Время</div>
-                  {days.map(day => (
-                    <div key={day} className="p-3 text-center font-medium text-neutral-700 bg-neutral-50 rounded-xl">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {hours.map(hour => (
-                    <div key={hour} className="grid grid-cols-8 gap-2">
-                      <div className="p-3 text-center font-medium text-neutral-600 bg-neutral-50 rounded-xl min-h-[80px] flex items-center justify-center">
-                        {hour}:00
-                      </div>
-                      {days.map((day, dayIndex) => {
-                        const key = `${dayIndex}-${hour}`;
-                        return (
-                          <textarea
-                            key={key}
-                            value={weekPlan[key] || ''}
-                            onChange={(e) => setWeekPlan(prev => ({ ...prev, [key]: e.target.value }))}
-                            placeholder="..."
-                            className="p-3 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-neutral-400 min-h-[80px] resize-none font-light placeholder-neutral-400"
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 6: // Награды
+      case 3: // Награды
         return (
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
@@ -1399,7 +827,7 @@ const App = () => {
           </div>
         );
 
-      case 7: // Статистика
+      case 4: // Статистика
         const topStreaks = Object.entries(streaks)
           .sort(([,a], [,b]) => b.count - a.count)
           .slice(0, 5)
@@ -1428,7 +856,7 @@ const App = () => {
                     { label: 'Всего очков заработано', value: totalPoints },
                     { label: 'Текущая неделя', value: week },
                     { label: 'Выполнено привычек сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
-                    { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals, ...monthlyProjects].filter(t => !t.completed).length },
+                    { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals].length },
                     { label: 'Настроение сегодня', value: `${mood}/10` }
                   ].map((item, i) => (
                     <div key={i} className="flex justify-between items-center p-4 bg-neutral-50 rounded-xl">
@@ -1439,7 +867,6 @@ const App = () => {
                 </div>
 
                 <div className="space-y-6">
-                  {/* Лучшие серии */}
                   <div>
                     <h4 className="font-medium text-neutral-800 mb-4 flex items-center">
                       <Flame className="w-5 h-5 mr-2 text-orange-500" />
@@ -1459,7 +886,6 @@ const App = () => {
                     </div>
                   </div>
 
-                  {/* Достижения */}
                   <div>
                     <h4 className="font-medium text-neutral-800 mb-4">Последние достижения</h4>
                     <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -1478,37 +904,6 @@ const App = () => {
                 </div>
               </div>
             </div>
-
-            {/* Информация о сбросе */}
-            <div className="bg-neutral-50 rounded-3xl p-8 border border-neutral-200">
-              <h4 className="font-medium text-neutral-800 mb-4 flex items-center">
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Как работает система
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm font-light text-neutral-600">
-                <div>
-                  <h5 className="font-medium text-neutral-800 mb-2">Ежедневный сброс (00:00)</h5>
-                  <ul className="space-y-1">
-                    <li>• Ежедневные привычки сбрасываются</li>
-                    <li>• Недельные и месячные цели остаются</li>
-                    <li>• Очки и уровень сохраняются</li>
-                    <li>• Серии продолжаются при выполнении</li>
-                  </ul>
-                </div>
-                <div>
-                  <h5 className="font-medium text-neutral-800 mb-2">Награды</h5>
-                  <ul className="space-y-1">
-                    <li>• Разные периоды сброса (1-14 дней)</li>
-                    <li>• Кофе сбрасывается каждый день</li>
-                    <li>• SPA и рестораны - раз в неделю</li>
-                    <li>• Крупные покупки - раз в 2 недели</li>
-                  </ul>
-                </div>
-              </div>
-              <p className="mt-4 text-neutral-500 text-xs font-light">
-                До следующего сброса: {getTimeUntilReset()}
-              </p>
-            </div>
           </div>
         );
 
@@ -1521,7 +916,6 @@ const App = () => {
     <div className="min-h-screen bg-neutral-50" style={{ fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif' }}>
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         
-        {/* Header */}
         <div className="text-center py-8 mb-12">
           <div className="flex items-center justify-center space-x-4 mb-4">
             <InteractiveEye />
@@ -1530,7 +924,6 @@ const App = () => {
           <p className="text-neutral-600 font-light tracking-wide">Система личной эффективности</p>
         </div>
 
-        {/* Navigation */}
         <div className="flex items-center justify-between mb-12">
           <button
             onClick={() => changeScreen('prev')}
@@ -1567,12 +960,10 @@ const App = () => {
           </button>
         </div>
 
-        {/* Content */}
         <div className="mb-12">
           {renderScreen()}
         </div>
 
-        {/* Footer */}
         <div className="text-center py-8">
           <div className="bg-gradient-to-r from-neutral-800 to-neutral-900 rounded-3xl shadow-sm p-8 text-center">
             <p className="text-white font-light text-lg tracking-wide mb-2">
@@ -1583,7 +974,6 @@ const App = () => {
         </div>
       </div>
 
-      {/* Кнопка справки */}
       <HelpButton />
     </div>
   );
