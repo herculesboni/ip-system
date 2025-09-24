@@ -48,7 +48,173 @@ const InteractiveEye = ({ scale = 1 }) => {
   );
 };
 
-// Компонент кнопки справки
+// Компонент медитации
+const MeditationScreen = () => {
+  const [isActive, setIsActive] = useState(false);
+  const [duration, setDuration] = useState(5);
+  const [timeLeft, setTimeLeft] = useState(0);
+  const [lilyColor, setLilyColor] = useState('white');
+  const [leaves, setLeaves] = useState([]);
+
+  useEffect(() => {
+    let interval;
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && isActive) {
+      setIsActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [isActive, timeLeft]);
+
+  // Генерация падающих листьев
+  useEffect(() => {
+    if (isActive) {
+      const interval = setInterval(() => {
+        const newLeaf = {
+          id: Date.now(),
+          left: Math.random() * 100,
+          animationDuration: 3 + Math.random() * 2,
+          size: 20 + Math.random() * 10
+        };
+        setLeaves(prev => [...prev.slice(-10), newLeaf]);
+      }, 800);
+      return () => clearInterval(interval);
+    }
+  }, [isActive]);
+
+  const startMeditation = () => {
+    setTimeLeft(duration * 60);
+    setIsActive(true);
+  };
+
+  const stopMeditation = () => {
+    setIsActive(false);
+    setTimeLeft(0);
+  };
+
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="relative min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 overflow-hidden">
+      {/* Падающие листья */}
+      {leaves.map(leaf => (
+        <div
+          key={leaf.id}
+          className="absolute text-green-200 opacity-60 pointer-events-none"
+          style={{
+            left: `${leaf.left}%`,
+            fontSize: `${leaf.size}px`,
+            animation: `fall ${leaf.animationDuration}s linear`,
+            top: '-50px'
+          }}
+        >
+          🍃
+        </div>
+      ))}
+
+      {/* Белые лилии внизу */}
+      <div className="absolute bottom-0 left-0 right-0 flex justify-center space-x-4 pb-8">
+        {[...Array(5)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setLilyColor(lilyColor === 'white' ? 'red' : 'white')}
+            className="text-4xl transition-all duration-500 transform hover:scale-110"
+            style={{ 
+              filter: lilyColor === 'red' ? 'hue-rotate(340deg) saturate(2)' : 'none',
+              textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+          >
+            🌸
+          </button>
+        ))}
+      </div>
+
+      {/* Основной интерфейс медитации */}
+      <div className="flex flex-col items-center justify-center min-h-screen p-8">
+        <div className="bg-white bg-opacity-90 backdrop-blur-sm rounded-3xl shadow-lg p-8 text-center max-w-md w-full">
+          <h2 className="text-2xl font-light text-neutral-900 mb-6">Медитация</h2>
+          
+          {!isActive ? (
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <label className="block text-neutral-700 font-light">Длительность</label>
+                <div className="flex justify-center space-x-4">
+                  {[1, 3, 5, 10, 15].map(mins => (
+                    <button
+                      key={mins}
+                      onClick={() => setDuration(mins)}
+                      className={`px-4 py-2 rounded-xl transition-all ${
+                        duration === mins 
+                          ? 'bg-neutral-900 text-white' 
+                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                      }`}
+                    >
+                      {mins}м
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              <button
+                onClick={startMeditation}
+                className="bg-neutral-900 text-white px-8 py-3 rounded-2xl hover:bg-neutral-800 transition-colors font-light"
+              >
+                Начать медитацию
+              </button>
+              
+              <div className="text-sm text-neutral-600 font-light space-y-2 mt-6">
+                <p>• Найдите тихое место</p>
+                <p>• Сядьте удобно, закройте глаза</p>
+                <p>• Сосредоточьтесь на дыхании</p>
+                <p>• Позвольте мыслям приходить и уходить</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <div className="text-6xl font-extralight text-neutral-900">
+                {formatTime(timeLeft)}
+              </div>
+              
+              <div className="text-neutral-600 font-light">
+                <p className="mb-4">Дышите спокойно и глубоко</p>
+                <div className="w-full bg-neutral-200 rounded-full h-1">
+                  <div 
+                    className="bg-neutral-900 h-1 rounded-full transition-all duration-1000"
+                    style={{ width: `${((duration * 60 - timeLeft) / (duration * 60)) * 100}%` }}
+                  />
+                </div>
+              </div>
+              
+              <button
+                onClick={stopMeditation}
+                className="bg-neutral-100 text-neutral-700 px-6 py-2 rounded-xl hover:bg-neutral-200 transition-colors font-light"
+              >
+                Завершить
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes fall {
+          from {
+            transform: translateY(-100px) rotate(0deg);
+          }
+          to {
+            transform: translateY(100vh) rotate(360deg);
+          }
+        }
+      `}</style>
+    </div>
+  );
+};
 const HelpButton = () => {
   const [showHelp, setShowHelp] = useState(false);
 
@@ -202,7 +368,9 @@ const App = () => {
     { name: 'Привычки', icon: Trophy },
     { name: 'Цели', icon: Target },
     { name: 'Трекеры', icon: TrendingUp },
-    { name: 'Планирование', icon: Calendar },  
+    { name: 'История', icon: Calendar },
+    { name: 'Медитация', icon: Brain },
+    { name: 'Планирование', icon: Clock },  
     { name: 'Награды', icon: Gift },
     { name: 'Статистика', icon: BarChart3 }
   ];
@@ -651,7 +819,7 @@ const App = () => {
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌙</span>
-                  Вечерние ритуалы
+                  Вечерние привычки
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {Object.entries(ritualConfig)
@@ -675,6 +843,39 @@ const App = () => {
                       <RitualCard key={key} ritualKey={key} ritual={ritual} />
                     ))}
                 </div>
+              </div>
+            {/* История выполненных задач */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <CheckCircle className="w-6 h-6 mr-3 text-green-500" />
+                История выполненных задач
+              </h3>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {completedTasks.length === 0 ? (
+                  <p className="text-neutral-500 font-light">Выполненных задач пока нет</p>
+                ) : (
+                  completedTasks.slice(0, 15).map(task => {
+                    const completedDate = new Date(task.completedAt).toLocaleDateString('ru-RU');
+                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : task.taskType === 'weekly' ? 'Неделя' : 'Месяц';
+                    
+                    return (
+                      <div key={task.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
+                        <div className="flex items-center justify-between">
+                          <span className="text-neutral-900 font-light">{task.text}</span>
+                          <div className="flex items-center space-x-2 text-xs">
+                            <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full">
+                              {taskTypeLabel}
+                            </span>
+                            <span className="text-neutral-500">{completedDate}</span>
+                            <span className="bg-green-600 text-white px-2 py-1 rounded-full">
+                              +{task.priority}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>
@@ -925,7 +1126,174 @@ const App = () => {
           </div>
         );
 
-      case 3: // Планирование
+      case 3: // История и календарь
+        const today = new Date();
+        const currentMonth = today.getMonth();
+        const currentYear = today.getFullYear();
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+        const monthName = today.toLocaleString('ru-RU', { month: 'long' });
+
+        // Группируем выполненные задачи по дням
+        const tasksByDate = {};
+        completedTasks.forEach(task => {
+          const date = new Date(task.completedAt).toDateString();
+          if (!tasksByDate[date]) tasksByDate[date] = [];
+          tasksByDate[date].push(task);
+        });
+
+        return (
+          <div className="space-y-8">
+            {/* Календарь с историей */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-2xl font-light text-neutral-900 mb-8 text-center">
+                История выполнения • {monthName} {currentYear}
+              </h3>
+
+              {/* Календарь */}
+              <div className="max-w-2xl mx-auto">
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(day => (
+                    <div key={day} className="text-center font-medium text-neutral-600 p-2">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-7 gap-2">
+                  {/* Пустые дни в начале месяца */}
+                  {[...Array(firstDay === 0 ? 6 : firstDay - 1)].map((_, i) => (
+                    <div key={`empty-${i}`} className="h-16"></div>
+                  ))}
+                  
+                  {/* Дни месяца */}
+                  {[...Array(daysInMonth)].map((_, i) => {
+                    const day = i + 1;
+                    const date = new Date(currentYear, currentMonth, day);
+                    const dateString = date.toDateString();
+                    const tasksForDay = tasksByDate[dateString] || [];
+                    const isToday = date.toDateString() === today.toDateString();
+                    
+                    return (
+                      <div
+                        key={day}
+                        className={`h-16 p-2 rounded-xl border transition-all ${
+                          isToday 
+                            ? 'border-neutral-900 bg-neutral-50' 
+                            : tasksForDay.length > 0 
+                              ? 'border-green-200 bg-green-50 hover:bg-green-100' 
+                              : 'border-neutral-200 hover:border-neutral-300'
+                        }`}
+                      >
+                        <div className="text-sm font-medium text-neutral-900 mb-1">
+                          {day}
+                        </div>
+                        {tasksForDay.length > 0 && (
+                          <div className="flex items-center justify-center">
+                            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                            <span className="text-xs text-green-600 ml-1">
+                              {tasksForDay.length}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* История выполненных задач */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
+                <CheckCircle className="w-6 h-6 mr-3 text-green-500" />
+                Архив выполненных задач
+              </h3>
+              
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {completedTasks.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4">📋</div>
+                    <p className="text-neutral-500 font-light">Выполненных задач пока нет</p>
+                    <p className="text-sm text-neutral-400 mt-2">Завершите задачи чтобы увидеть их здесь</p>
+                  </div>
+                ) : (
+                  completedTasks.slice(0, 20).map(task => {
+                    const completedDate = new Date(task.completedAt);
+                    const dateStr = completedDate.toLocaleDateString('ru-RU');
+                    const timeStr = completedDate.toLocaleTimeString('ru-RU', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    });
+                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : 
+                                         task.taskType === 'weekly' ? 'Неделя' : 'Месяц';
+                    const taskTypeColor = task.taskType === 'daily' ? 'bg-blue-100 text-blue-600' : 
+                                         task.taskType === 'weekly' ? 'bg-purple-100 text-purple-600' : 
+                                         'bg-orange-100 text-orange-600';
+                    
+                    return (
+                      <div key={task.id} className="p-4 rounded-xl bg-green-50 border border-green-200">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-neutral-900 font-light mb-2">{task.text}</p>
+                            <div className="flex items-center space-x-3 text-xs">
+                              <span className={`px-2 py-1 rounded-full ${taskTypeColor}`}>
+                                {taskTypeLabel}
+                              </span>
+                              <span className="text-neutral-500">{dateStr} в {timeStr}</span>
+                            </div>
+                          </div>
+                          <div className="ml-4 flex-shrink-0">
+                            <span className="bg-green-600 text-white px-2 py-1 rounded-full text-xs font-medium">
+                              +{task.priority}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+              
+              {completedTasks.length > 20 && (
+                <div className="text-center mt-6">
+                  <p className="text-sm text-neutral-500">
+                    Показано 20 из {completedTasks.length} выполненных задач
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Общая статистика */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-6 text-center">
+                <div className="text-3xl font-light text-blue-600 mb-2">
+                  {completedTasks.filter(t => t.taskType === 'daily').length}
+                </div>
+                <p className="text-blue-600 font-medium">Ежедневных задач</p>
+              </div>
+              
+              <div className="bg-purple-50 border border-purple-200 rounded-2xl p-6 text-center">
+                <div className="text-3xl font-light text-purple-600 mb-2">
+                  {completedTasks.filter(t => t.taskType === 'weekly').length}
+                </div>
+                <p className="text-purple-600 font-medium">Недельных целей</p>
+              </div>
+              
+              <div className="bg-orange-50 border border-orange-200 rounded-2xl p-6 text-center">
+                <div className="text-3xl font-light text-orange-600 mb-2">
+                  {completedTasks.filter(t => t.taskType === 'monthly').length}
+                </div>
+                <p className="text-orange-600 font-medium">Месячных проектов</p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 4: // Медитация
+        return <MeditationScreen />;
+
+      case 5: // Планирование
         const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
         const hours = Array.from({ length: 16 }, (_, i) => i + 6);
 
@@ -970,7 +1338,7 @@ const App = () => {
           </div>
         );
 
-      case 4: // Награды
+      case 6: // Награды
         return (
           <div className="space-y-8">
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
@@ -1031,7 +1399,7 @@ const App = () => {
           </div>
         );
 
-      case 5: // Статистика
+      case 7: // Статистика
         const topStreaks = Object.entries(streaks)
           .sort(([,a], [,b]) => b.count - a.count)
           .slice(0, 5)
@@ -1059,7 +1427,7 @@ const App = () => {
                     { label: 'Очки накоплено', value: points },
                     { label: 'Всего очков заработано', value: totalPoints },
                     { label: 'Текущая неделя', value: week },
-                    { label: 'Выполнено ритуалов сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
+                    { label: 'Выполнено привычек сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
                     { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals, ...monthlyProjects].filter(t => !t.completed).length },
                     { label: 'Настроение сегодня', value: `${mood}/10` }
                   ].map((item, i) => (
@@ -1121,7 +1489,7 @@ const App = () => {
                 <div>
                   <h5 className="font-medium text-neutral-800 mb-2">Ежедневный сброс (00:00)</h5>
                   <ul className="space-y-1">
-                    <li>• Ежедневные ритуалы сбрасываются</li>
+                    <li>• Ежедневные привычки сбрасываются</li>
                     <li>• Недельные и месячные цели остаются</li>
                     <li>• Очки и уровень сохраняются</li>
                     <li>• Серии продолжаются при выполнении</li>
