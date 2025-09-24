@@ -135,7 +135,7 @@ const App = () => {
   const [dailyTasks, setDailyTasks] = useState(() => JSON.parse(localStorage.getItem('ip-dailyTasks') || '[]'));
   const [weeklyGoals, setWeeklyGoals] = useState(() => JSON.parse(localStorage.getItem('ip-weeklyGoals') || '[]'));
   const [monthlyProjects, setMonthlyProjects] = useState(() => JSON.parse(localStorage.getItem('ip-monthlyProjects') || '[]'));
-  const [completedTasks, setCompletedTasks] = useState(() => JSON.parse(localStorage.getItem('ip-completedTasks') || '[]'));
+  const [completedHistory, setCompletedHistory] = useState(() => JSON.parse(localStorage.getItem('ip-completedHistory') || '{}'));
   
   const [newTask, setNewTask] = useState('');
   const [taskPriority, setTaskPriority] = useState(1);
@@ -199,10 +199,10 @@ const App = () => {
   ];
 
   const screens = [
-    { name: 'Привычки', icon: Trophy },
+    { name: 'Ритуалы', icon: Trophy },
     { name: 'Цели', icon: Target },
     { name: 'Трекеры', icon: TrendingUp },
-    { name: 'Планирование', icon: Calendar },  
+    { name: 'Календарь', icon: Calendar },  
     { name: 'Награды', icon: Gift },
     { name: 'Статистика', icon: BarChart3 }
   ];
@@ -224,7 +224,6 @@ const App = () => {
   useEffect(() => { localStorage.setItem('ip-dailyTasks', JSON.stringify(dailyTasks)); }, [dailyTasks]);
   useEffect(() => { localStorage.setItem('ip-weeklyGoals', JSON.stringify(weeklyGoals)); }, [weeklyGoals]);
   useEffect(() => { localStorage.setItem('ip-monthlyProjects', JSON.stringify(monthlyProjects)); }, [monthlyProjects]);
-  useEffect(() => { localStorage.setItem('ip-completedTasks', JSON.stringify(completedTasks)); }, [completedTasks]);
   useEffect(() => { localStorage.setItem('ip-todayMood', mood.toString()); }, [mood]);
   useEffect(() => { localStorage.setItem('ip-gratitude', JSON.stringify(gratitude)); }, [gratitude]);
   useEffect(() => { localStorage.setItem('ip-sleepData', JSON.stringify(sleepData)); }, [sleepData]);
@@ -232,6 +231,7 @@ const App = () => {
   useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
   useEffect(() => { localStorage.setItem('ip-weekPlan', JSON.stringify(weekPlan)); }, [weekPlan]);
   useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
+  useEffect(() => { localStorage.setItem('ip-completedHistory', JSON.stringify(completedHistory)); }, [completedHistory]);
   useEffect(() => { localStorage.setItem('ip-lastReset', lastResetDate); }, [lastResetDate]);
 
   const getTimeUntilReset = () => {
@@ -300,6 +300,7 @@ const App = () => {
   const toggleRitual = useCallback((ritualKey) => {
     const ritual = ritualConfig[ritualKey];
     if (!ritual) return;
+    const today = new Date().toISOString().split('T')[0];
 
     setRituals(prevRituals => {
       const isCurrentlyActive = prevRituals[ritualKey];
@@ -308,9 +309,31 @@ const App = () => {
       if (!isCurrentlyActive) {
         updatePoints(ritual.points);
         updateStreak(ritualKey, true);
+        // Записываем в историю выполнения
+        setCompletedHistory(prevHistory => {
+          const dayHistory = prevHistory[today] || [];
+          return {
+            ...prevHistory,
+            [today]: [...dayHistory, {
+              id: `ritual-${ritualKey}`,
+              text: ritual.name,
+              type: 'ritual',
+              points: ritual.points,
+              completedAt: new Date().toLocaleTimeString()
+            }]
+          };
+        });
       } else {
         setPoints(prev => Math.max(0, prev - ritual.points));
         updateStreak(ritualKey, false);
+        // Убираем из истории выполнения
+        setCompletedHistory(prevHistory => {
+          const dayHistory = (prevHistory[today] || []).filter(h => h.id !== `ritual-${ritualKey}`);
+          return {
+            ...prevHistory,
+            [today]: dayHistory
+          };
+        });
       }
 
       return newRituals;
@@ -340,33 +363,45 @@ const App = () => {
   }, [newTask, taskPriority, taskType]);
 
   const toggleTask = useCallback((taskId, taskType) => {
+    const today = new Date().toISOString().split('T')[0];
+    
     const toggleTaskInArray = (prevTasks) => {
       const taskIndex = prevTasks.findIndex(t => t.id === taskId);
       if (taskIndex === -1) return prevTasks;
 
       const task = prevTasks[taskIndex];
       const newTasks = [...prevTasks];
+      newTasks[taskIndex] = { ...task, completed: !task.completed };
 
       if (!task.completed) {
-        // Задача выполняется - добавляем в архив и даем очки
-        const completedTask = {
-          ...task,
-          completed: true,
-          completedAt: new Date().toISOString(),
-          taskType: taskType
-        };
-        
-        setCompletedTasks(prev => [completedTask, ...prev]);
         updatePoints(task.priority);
-        
-        // Убираем задачу из текущего списка
-        return newTasks.filter(t => t.id !== taskId);
+        // Записываем в историю выполнения
+        setCompletedHistory(prevHistory => {
+          const dayHistory = prevHistory[today] || [];
+          return {
+            ...prevHistory,
+            [today]: [...dayHistory, {
+              id: task.id,
+              text: task.text,
+              type: taskType,
+              points: task.priority,
+              completedAt: new Date().toLocaleTimeString()
+            }]
+          };
+        });
       } else {
-        // Задача снимается с выполнения (только если еще в списке)
-        newTasks[taskIndex] = { ...task, completed: false };
         setPoints(prev => Math.max(0, prev - task.priority));
-        return newTasks;
+        // Убираем из истории выполнения
+        setCompletedHistory(prevHistory => {
+          const dayHistory = (prevHistory[today] || []).filter(h => h.id !== task.id);
+          return {
+            ...prevHistory,
+            [today]: dayHistory
+          };
+        });
       }
+
+      return newTasks;
     };
 
     if (taskType === 'daily') {
@@ -613,15 +648,15 @@ const App = () => {
               </div>
             </div>
 
-            {/* Привычки по категориям */}
+            {/* Ритуалы по категориям */}
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные привычки</h3>
+              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные ритуалы</h3>
               
               {/* Утренние */}
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌅</span>
-                  Утренние привычки
+                  Утренние ритуалы
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {Object.entries(ritualConfig)
@@ -651,7 +686,7 @@ const App = () => {
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌙</span>
-                  Вечерние привычки
+                  Вечерние ритуалы
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {Object.entries(ritualConfig)
@@ -675,39 +710,6 @@ const App = () => {
                       <RitualCard key={key} ritualKey={key} ritual={ritual} />
                     ))}
                 </div>
-              </div>
-            {/* История выполненных задач */}
-            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-xl font-medium text-neutral-900 mb-6 flex items-center">
-                <CheckCircle className="w-6 h-6 mr-3 text-green-500" />
-                История выполненных задач
-              </h3>
-              <div className="space-y-2 max-h-64 overflow-y-auto">
-                {completedTasks.length === 0 ? (
-                  <p className="text-neutral-500 font-light">Выполненных задач пока нет</p>
-                ) : (
-                  completedTasks.slice(0, 15).map(task => {
-                    const completedDate = new Date(task.completedAt).toLocaleDateString('ru-RU');
-                    const taskTypeLabel = task.taskType === 'daily' ? 'День' : task.taskType === 'weekly' ? 'Неделя' : 'Месяц';
-                    
-                    return (
-                      <div key={task.id} className="p-3 rounded-xl bg-green-50 border border-green-200">
-                        <div className="flex items-center justify-between">
-                          <span className="text-neutral-900 font-light">{task.text}</span>
-                          <div className="flex items-center space-x-2 text-xs">
-                            <span className="bg-green-100 text-green-600 px-2 py-1 rounded-full">
-                              {taskTypeLabel}
-                            </span>
-                            <span className="text-neutral-500">{completedDate}</span>
-                            <span className="bg-green-600 text-white px-2 py-1 rounded-full">
-                              +{task.priority}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
               </div>
             </div>
           </div>
@@ -958,48 +960,188 @@ const App = () => {
           </div>
         );
 
-      case 3: // Планирование
-        const days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
-        const hours = Array.from({ length: 16 }, (_, i) => i + 6);
+      case 3: // Календарь выполненных целей
+        const [selectedDate, setSelectedDate] = useState(null);
+        const [currentMonth, setCurrentMonth] = useState(new Date());
+        
+        // Получить дни месяца
+        const getDaysInMonth = (date) => {
+          const year = date.getFullYear();
+          const month = date.getMonth();
+          const firstDay = new Date(year, month, 1);
+          const lastDay = new Date(year, month + 1, 0);
+          const startDate = new Date(firstDay);
+          startDate.setDate(startDate.getDate() - firstDay.getDay()); // Начинаем с воскресенья
+          
+          const days = [];
+          for (let d = new Date(startDate); d <= lastDay || days.length % 7 !== 0; d.setDate(d.getDate() + 1)) {
+            days.push(new Date(d));
+          }
+          return days;
+        };
+        
+        const days = getDaysInMonth(currentMonth);
+        const today = new Date();
+        const todayString = today.toISOString().split('T')[0];
+        
+        const getCompletedTasksForDate = (date) => {
+          const dateString = date.toISOString().split('T')[0];
+          return completedHistory[dateString] || [];
+        };
+        
+        const navigateMonth = (direction) => {
+          setCurrentMonth(prev => {
+            const newMonth = new Date(prev);
+            newMonth.setMonth(newMonth.getMonth() + direction);
+            return newMonth;
+          });
+        };
 
         return (
-          <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-            <h3 className="text-2xl font-light text-neutral-900 mb-8">Планирование недели</h3>
-            
-            <div className="overflow-x-auto">
-              <div className="min-w-full" style={{ minWidth: '700px' }}>
-                <div className="grid grid-cols-8 gap-2 mb-4">
-                  <div className="p-3 text-center font-medium text-neutral-700">Время</div>
-                  {days.map(day => (
-                    <div key={day} className="p-3 text-center font-medium text-neutral-700 bg-neutral-50 rounded-xl">
-                      {day}
-                    </div>
-                  ))}
+          <div className="space-y-8">
+            {/* Календарь */}
+            <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+              <div className="flex items-center justify-between mb-8">
+                <div>
+                  <h3 className="text-2xl font-light text-neutral-900">Календарь достижений</h3>
+                  <p className="text-neutral-600 font-light">История выполненных задач и ритуалов</p>
                 </div>
-
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {hours.map(hour => (
-                    <div key={hour} className="grid grid-cols-8 gap-2">
-                      <div className="p-3 text-center font-medium text-neutral-600 bg-neutral-50 rounded-xl min-h-[80px] flex items-center justify-center">
-                        {hour}:00
+                
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => navigateMonth(-1)}
+                    className="p-2 bg-neutral-50 hover:bg-neutral-100 rounded-xl transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-neutral-600" />
+                  </button>
+                  <h4 className="text-lg font-medium text-neutral-800 min-w-[140px] text-center">
+                    {currentMonth.toLocaleDateString('ru-RU', { month: 'long', year: 'numeric' })}
+                  </h4>
+                  <button
+                    onClick={() => navigateMonth(1)}
+                    className="p-2 bg-neutral-50 hover:bg-neutral-100 rounded-xl transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-neutral-600" />
+                  </button>
+                </div>
+              </div>
+              
+              {/* Дни недели */}
+              <div className="grid grid-cols-7 gap-2 mb-4">
+                {['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'].map(day => (
+                  <div key={day} className="p-3 text-center font-medium text-neutral-500 text-sm">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              
+              {/* Календарная сетка */}
+              <div className="grid grid-cols-7 gap-2 mb-6">
+                {days.map((day, index) => {
+                  const dateString = day.toISOString().split('T')[0];
+                  const completedTasks = getCompletedTasksForDate(day);
+                  const isToday = dateString === todayString;
+                  const isCurrentMonth = day.getMonth() === currentMonth.getMonth();
+                  const hasActivity = completedTasks.length > 0;
+                  
+                  return (
+                    <button
+                      key={index}
+                      onClick={() => hasActivity && setSelectedDate(dateString)}
+                      className={`relative p-3 rounded-xl text-sm font-medium transition-all min-h-[60px] ${
+                        isToday 
+                          ? 'bg-neutral-900 text-white' 
+                          : hasActivity
+                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 cursor-pointer'
+                            : isCurrentMonth
+                              ? 'bg-neutral-50 text-neutral-400'
+                              : 'text-neutral-300'
+                      }`}
+                      disabled={!hasActivity}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>{day.getDate()}</span>
+                        {hasActivity && (
+                          <div className="flex items-center space-x-1 mt-1">
+                            <div className={`w-1.5 h-1.5 rounded-full ${isToday ? 'bg-white' : 'bg-emerald-600'}`} />
+                            <span className={`text-xs ${isToday ? 'text-white' : 'text-emerald-700'}`}>
+                              {completedTasks.length}
+                            </span>
+                          </div>
+                        )}
                       </div>
-                      {days.map((day, dayIndex) => {
-                        const key = `${dayIndex}-${hour}`;
-                        return (
-                          <textarea
-                            key={key}
-                            value={weekPlan[key] || ''}
-                            onChange={(e) => setWeekPlan(prev => ({ ...prev, [key]: e.target.value }))}
-                            placeholder="..."
-                            className="p-3 text-sm border border-neutral-200 rounded-xl focus:outline-none focus:border-neutral-400 min-h-[80px] resize-none font-light placeholder-neutral-400"
-                          />
-                        );
-                      })}
-                    </div>
-                  ))}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              {/* Легенда */}
+              <div className="flex items-center justify-center space-x-8 text-sm text-neutral-600">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-neutral-900 rounded"></div>
+                  <span>Сегодня</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-emerald-100 border border-emerald-200 rounded"></div>
+                  <span>Выполненные задачи</span>
                 </div>
               </div>
             </div>
+            
+            {/* Детали выбранного дня */}
+            {selectedDate && (
+              <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
+                <div className="flex items-center justify-between mb-6">
+                  <h4 className="text-xl font-medium text-neutral-900">
+                    {new Date(selectedDate).toLocaleDateString('ru-RU', { 
+                      weekday: 'long', 
+                      day: 'numeric', 
+                      month: 'long' 
+                    })}
+                  </h4>
+                  <button
+                    onClick={() => setSelectedDate(null)}
+                    className="p-2 hover:bg-neutral-100 rounded-xl transition-colors"
+                  >
+                    <X className="w-4 h-4 text-neutral-600" />
+                  </button>
+                </div>
+                
+                <div className="space-y-4">
+                  {completedHistory[selectedDate]?.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 bg-neutral-50 rounded-xl">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                          item.type === 'ritual' ? 'bg-blue-100' :
+                          item.type === 'daily' ? 'bg-emerald-100' :
+                          item.type === 'weekly' ? 'bg-purple-100' : 'bg-orange-100'
+                        }`}>
+                          {item.type === 'ritual' ? <Trophy className="w-4 h-4 text-blue-600" /> :
+                           item.type === 'daily' ? <CheckCircle className="w-4 h-4 text-emerald-600" /> :
+                           item.type === 'weekly' ? <Target className="w-4 h-4 text-purple-600" /> :
+                           <Star className="w-4 h-4 text-orange-600" />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-neutral-900">{item.text}</p>
+                          <p className="text-xs text-neutral-500">{item.completedAt}</p>
+                        </div>
+                      </div>
+                      <span className="text-sm font-medium text-neutral-600">+{item.points}</span>
+                    </div>
+                  )) || []}
+                </div>
+                
+                {/* Итоги дня */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 rounded-xl border border-emerald-200">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-neutral-800">Итого за день:</span>
+                    <span className="font-medium text-emerald-700">
+                      +{completedHistory[selectedDate]?.reduce((sum, item) => sum + item.points, 0) || 0} очков
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -1092,7 +1234,7 @@ const App = () => {
                     { label: 'Очки накоплено', value: points },
                     { label: 'Всего очков заработано', value: totalPoints },
                     { label: 'Текущая неделя', value: week },
-                    { label: 'Выполнено привычек сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
+                    { label: 'Выполнено ритуалов сегодня', value: `${Object.values(rituals).filter(Boolean).length}/20` },
                     { label: 'Активных целей', value: [...dailyTasks, ...weeklyGoals, ...monthlyProjects].filter(t => !t.completed).length },
                     { label: 'Настроение сегодня', value: `${mood}/10` }
                   ].map((item, i) => (
