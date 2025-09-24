@@ -134,7 +134,11 @@ const App = () => {
   // Задачи разных типов
   const [dailyTasks, setDailyTasks] = useState(() => JSON.parse(localStorage.getItem('ip-dailyTasks') || '[]'));
   const [weeklyGoals, setWeeklyGoals] = useState(() => JSON.parse(localStorage.getItem('ip-weeklyGoals') || '[]'));
+<<<<<<< HEAD
   const [completedTasks, setCompletedTasks] = useState(() => JSON.parse(localStorage.getItem('ip-completedTasks') || '[]'));
+=======
+  const [monthlyProjects, setMonthlyProjects] = useState(() => JSON.parse(localStorage.getItem('ip-monthlyProjects') || '[]'));
+>>>>>>> parent of 68174b5 (Update App.js)
   
   const [newTask, setNewTask] = useState('');
   const [taskPriority, setTaskPriority] = useState(1);
@@ -184,7 +188,7 @@ const App = () => {
   };
 
   const screens = [
-    { name: 'Привычки', icon: Trophy },
+    { name: 'Ритуалы', icon: Trophy },
     { name: 'Цели', icon: Target },
     { name: 'История', icon: Calendar },
     { name: 'Награды', icon: Gift },
@@ -207,7 +211,11 @@ const App = () => {
   useEffect(() => { localStorage.setItem('ip-streaks', JSON.stringify(streaks)); }, [streaks]);
   useEffect(() => { localStorage.setItem('ip-dailyTasks', JSON.stringify(dailyTasks)); }, [dailyTasks]);
   useEffect(() => { localStorage.setItem('ip-weeklyGoals', JSON.stringify(weeklyGoals)); }, [weeklyGoals]);
+<<<<<<< HEAD
   useEffect(() => { localStorage.setItem('ip-completedTasks', JSON.stringify(completedTasks)); }, [completedTasks]);
+=======
+  useEffect(() => { localStorage.setItem('ip-monthlyProjects', JSON.stringify(monthlyProjects)); }, [monthlyProjects]);
+>>>>>>> parent of 68174b5 (Update App.js)
   useEffect(() => { localStorage.setItem('ip-todayMood', mood.toString()); }, [mood]);
   useEffect(() => { localStorage.setItem('ip-achievements', JSON.stringify(achievements)); }, [achievements]);
   useEffect(() => { localStorage.setItem('ip-rewards', JSON.stringify(rewards)); }, [rewards]);
@@ -322,8 +330,10 @@ const App = () => {
 
       const task = prevTasks[taskIndex];
       const newTasks = [...prevTasks];
+      newTasks[taskIndex] = { ...task, completed: !task.completed };
 
       if (!task.completed) {
+<<<<<<< HEAD
         const completedTask = {
           ...task,
           completed: true,
@@ -337,9 +347,14 @@ const App = () => {
         return newTasks.filter(t => t.id !== taskId);
       } else {
         newTasks[taskIndex] = { ...task, completed: false };
+=======
+        updatePoints(task.priority);
+      } else {
+>>>>>>> parent of 68174b5 (Update App.js)
         setPoints(prev => Math.max(0, prev - task.priority));
-        return newTasks;
       }
+
+      return newTasks;
     };
 
     if (taskType === 'daily') {
@@ -547,13 +562,17 @@ const App = () => {
               </div>
             </div>
 
+<<<<<<< HEAD
+=======
+            {/* Ритуалы по категориям */}
+>>>>>>> parent of 68174b5 (Update App.js)
             <div className="bg-white rounded-3xl shadow-sm p-8 border border-neutral-100">
-              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные привычки</h3>
+              <h3 className="text-2xl font-light text-neutral-900 mb-8">Ежедневные ритуалы</h3>
               
               <div className="mb-10">
                 <h4 className="text-lg font-medium text-neutral-800 mb-6 flex items-center">
                   <span className="text-2xl mr-3">🌅</span>
-                  Утренние привычки
+                  Утренние ритуалы
                 </h4>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                   {Object.entries(ritualConfig)
